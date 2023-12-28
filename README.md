@@ -4,31 +4,52 @@ Gossip is my submission for CVWO winter assignment AY23/24. It is hosted on AWS 
 
 ## Getting Started
 
+### Cloning the repo
+
 ```
 git clone https://github.com/IzN432/gossip.git
 
 cd gossip
 ```
 
+### Setting up the PostgreSQL
+
+1. Create a new database called gossip and run the SQL queries in database/database.sql
+2. Add your database username and password into the .env file
+   
 ### Starting front end
 
-```
-cd gossip-frontend
+1. Change to the /gossip/gossip-frontend directory:
+    ```bash
+    cd /gossip/gossip-frontend
+    ```
 
-npm install
+2. Install packages:
+    ```bash
+    npm install
+    ```
 
-npm start
-```
+3. Run the application:
+    ```bash
+    npm start
+    ```
 
 ### Starting back end
 
-```
-cd gossip
+1. Change to the /gossip directory:
+    ```bash
+    cd /gossip
+    ```
 
-go download
+2. Download dependencies:
+    ```bash
+    go download
+    ```
 
-go run main.go -mode dev
-```
+3. Run the application in development mode:
+    ```bash
+    go run main.go -mode dev
+    ```
 
 The web app will be available at localhost:3000
 
@@ -36,7 +57,7 @@ The web app will be available at localhost:3000
 
 ### Authentication
 
-- **/signin:** Sign in to an existing account with an optional password.
+- **/login:** Sign in to an existing account with an optional password.
 - **/signup:** Create a new account with an optional password.
 
 ### Viewing Posts
@@ -66,22 +87,3 @@ The web app will be available at localhost:3000
 - **Top-left Button:** Brings you home or to the create post screen
 - **Top-right Button:** Opens up account options, right now is only Logout
   
-## Production
-
-A guide to simulate production environment
-
-```
-cd gossip
-
-cd gossip-frontend
-
-npm run build
-
-cd ..
-
-go build -o main.exe
-
-.\main.exe
-```
-
-The web app will be available at localhost:8080
