@@ -44,10 +44,10 @@ function EditPost() {
 
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	const [title, setTitle] = useState(post ? post.title : "");
+	const [title, setTitle] = useState("");
 	const [titleError, setTitleError] = useState("");
 
-	const [content, setContent] = useState(post ? post.content : "");
+	const [content, setContent] = useState("");
 	const [contentError, setContentError] = useState("");
 
 	const handleTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -77,11 +77,16 @@ function EditPost() {
 	useEffect(() => {
 		if (post) {
 			setTagList(post.tags);
+			setTitle(post.title);
+			setContent(post.content);
 		}
 	}, [post]);
 
 	useEffect(() => {
-		if (postError) errorHandle(postError, "Post");
+		if (postError) {
+			errorHandle(postError, "Post");
+			navigate("/");
+		}
 	}, [postError]);
 
 	useEffect(() => {

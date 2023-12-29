@@ -56,9 +56,12 @@ function DisplayCard(props: DisplayCardProps) {
 
 	const user = getUser();
 
-	const isOwnPost = user.id === post.owner.id;
+	const hasEditPerms =
+		user.id === post.owner.id ||
+		user.role == "superuser" ||
+		user.role == "admin";
 
-	const tagLimit = isSmall ? 1 : isOwnPost ? 3 : 4;
+	const tagLimit = isSmall ? 1 : hasEditPerms ? 3 : 4;
 
 	// Listeners
 	const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
@@ -217,11 +220,11 @@ function DisplayCard(props: DisplayCardProps) {
 				</Typography>
 				<HeartButton
 					filled={
-						(post.like.interacted && post.like.like_or_dislike) || isOwnPost
+						(post.like.interacted && post.like.like_or_dislike) || hasEditPerms
 					}
 					handleClick={handleHeartClick}
 				/>
-				{isOwnPost && !isSmall && (
+				{hasEditPerms && !isSmall && (
 					<Box sx={{ display: "flex", gap: "10px", marginLeft: "20px" }}>
 						<Tooltip title="Delete">
 							<DeleteIcon

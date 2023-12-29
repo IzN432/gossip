@@ -75,7 +75,10 @@ function ViewPost() {
 	const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 	const open = Boolean(anchorEl);
 
-	const isOwnPost = post?.owner.id === user.id;
+	const hasEditPerms =
+		post?.owner.id === user.id ||
+		user.role == "admin" ||
+		user.role == "superuser";
 
 	const tagLimit: number = isSmall ? 1 : 4;
 
@@ -296,7 +299,7 @@ function ViewPost() {
 								sx={{
 									display: "flex",
 									flexDirection: {
-										xs: isOwnPost ? "column" : "row",
+										xs: hasEditPerms ? "column" : "row",
 										sm: "row",
 									},
 									gap: { xs: "20px", sm: "0px" },
@@ -377,7 +380,7 @@ function ViewPost() {
 										<HeartButton
 											filled={
 												(post!.like.interacted && post!.like.like_or_dislike) ||
-												isOwnPost
+												hasEditPerms
 											}
 											handleClick={handleHeartClick}
 										/>
@@ -401,7 +404,7 @@ function ViewPost() {
 											filled={
 												(post!.like.interacted &&
 													!post!.like.like_or_dislike) ||
-												isOwnPost
+												hasEditPerms
 											}
 											handleClick={handleDislikeClick}
 										/>
@@ -461,7 +464,7 @@ function ViewPost() {
 											}).format((replies || []).length)}
 										</Typography>
 									</Box>
-									{isOwnPost && (
+									{hasEditPerms && (
 										<>
 											<Tooltip title="Delete">
 												<DeleteIcon
