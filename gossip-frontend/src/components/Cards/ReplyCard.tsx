@@ -38,6 +38,9 @@ function ReplyCard(props: ReplyCardProps) {
 
 	const user = getUser();
 
+	const hasEditPerm =
+		user.id === id || user.role === "superuser" || user.role === "admin";
+
 	const handleEditClick = () => {
 		setReplyDialogOpen(true);
 	};
@@ -121,13 +124,13 @@ function ReplyCard(props: ReplyCardProps) {
 					variant="body1"
 					sx={{
 						color: theme.palette.text.primary,
-						width: user.id === owner.id ? "calc(100% - 100px)" : "100%",
+						width: hasEditPerm ? "calc(100% - 100px)" : "100%",
 						wordBreak: "break-word",
 					}}
 				>
 					{content}
 				</Typography>
-				{user.id === owner.id && (
+				{hasEditPerm && (
 					<Box
 						sx={{
 							display: "flex",
