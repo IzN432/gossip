@@ -80,7 +80,7 @@ function App() {
 				<AuthContext.Provider value={isAuthenticated}>
 					<Box
 						sx={{
-							height: "100vh",
+							height: "100%",
 							backgroundColor: theme.palette.background.default,
 						}}
 					>

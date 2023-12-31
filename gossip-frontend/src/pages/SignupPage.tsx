@@ -86,7 +86,7 @@ function SignupPage() {
 		<Box
 			sx={{
 				backgroundColor: `${theme.palette.background.default}`,
-				height: "100vh",
+				height: "100%",
 				display: "flex",
 				flexDirection: "column",
 				justifyContent: "center",

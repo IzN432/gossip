@@ -101,7 +101,7 @@ function CreatePost() {
 		<Box
 			sx={{
 				backgroundColor: `${theme.palette.background.default}`,
-				height: "100vh",
+				height: "100%",
 				display: "flex",
 				justifyContent: "center",
 				overflowY: "hidden",
@@ -123,7 +123,7 @@ function CreatePost() {
 				component="form"
 				onSubmit={handleSubmit}
 				sx={{
-					height: { xs: "100vh", sm: "auto" },
+					height: { xs: "100%", sm: "auto" },
 					display: "flex",
 					flexDirection: "column",
 					alignItems: "center",

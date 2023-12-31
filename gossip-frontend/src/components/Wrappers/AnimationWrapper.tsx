@@ -33,6 +33,7 @@ function AnimationWrapper({ children, direction }: AnimationWrapperProps) {
 	return (
 		<AnimationContext.Provider value={customNavigate}>
 			<Slide
+				style={{ height: "100%" }}
 				in={isIn}
 				appear
 				timeout={timeout}

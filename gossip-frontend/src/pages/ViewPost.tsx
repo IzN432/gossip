@@ -181,7 +181,7 @@ function ViewPost() {
 			<Box
 				sx={{
 					backgroundColor: `${theme.palette.background.default}`,
-					maxHeight: "100vh",
+					maxHeight: "100%",
 					height: "auto",
 					display: "flex",
 					justifyContent: "center",
@@ -212,7 +212,7 @@ function ViewPost() {
 					)}
 					<Box
 						sx={{
-							maxHeight: "100vh",
+							maxHeight: "100%",
 							height: "auto",
 							display: "flex",
 							flexDirection: "column",
