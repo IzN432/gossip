@@ -22,11 +22,15 @@ function removeSelfDislike(a: PostMini): number {
 }
 
 export function errorHandle(error: any, origin: string) {
-	if (!error) toast.error(`${origin}: Something went wrong`);
+	toast.error(errorMessage(error, origin));
+}
+
+export function errorMessage(error: any, origin: string) {
+	if (!error) return `${origin}: Something went wrong`;
 	else if ("data" in error)
-		toast.error(`${origin}: ${(error.data as { error: string }).error}`);
-	else if ("error" in error) toast.error(`${origin}: ${error.error as string}`);
-	else toast.error(`${origin}: Something went wrong`);
+		return `${origin}: ${(error.data as { error: string }).error}`;
+	else if ("error" in error) return `${origin}: ${error.error as string}`;
+	else return `${origin}: Something went wrong`;
 }
 
 export function capitalizeFirstLetter(str: string) {

@@ -65,7 +65,7 @@ func CreateReply(context *gin.Context, db *sql.DB, requesterId int) {
 	var newReply models.Reply
 
 	if err := context.ShouldBindJSON(&newReply); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect input format"})
 		return
 	}
 
@@ -137,7 +137,7 @@ func EditReply(context *gin.Context, db *sql.DB, requesterRole string, requester
 
 	// Bind the JSON to updatedReply
 	if err := context.ShouldBindJSON(&updatedReply); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect input format"})
 		return
 	}
 

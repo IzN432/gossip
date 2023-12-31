@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"database/sql"
 	"log"
@@ -73,10 +74,6 @@ func main() {
 		router.Use(cors.New(config))
 	}
 	
-	if (mode == "production") { 
-		// Serve frontend static files
-		router.Use(static.Serve("/", static.LocalFile("./gossip-frontend/build", true)))
-	}
 	subpath := router.Group("/api")
 
 	{
@@ -263,6 +260,16 @@ func main() {
 			}
 
 			api.GetLikes(context, db, requesterId)
+		})
+	}
+
+	if (mode == "production") { 
+		// Serve frontend static files https://github.com/gin-gonic/contrib/issues/90#issuecomment-990237367
+		router.Use(static.Serve("/", static.LocalFile("./gossip-frontend/build", true)))
+		router.NoRoute(func(context *gin.Context) {
+			if !strings.HasPrefix(context.Request.RequestURI, "/api") {
+				context.File("./gossip-frontend/build/index.html")
+			}
 		})
 	}
 

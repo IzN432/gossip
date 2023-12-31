@@ -38,7 +38,7 @@ func SigninUser(context *gin.Context, db *sql.DB) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(databaseUser.Password), []byte(signinUser.Password))
 	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password: " + err.Error()})
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password"})
 		return
 	}
 
@@ -62,7 +62,7 @@ func CreateUser(context *gin.Context, db *sql.DB, requesterRole string) {
 	var newUser models.User
 
 	if err := context.ShouldBindJSON(&newUser); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Error while parsing JSON: " + err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect format"})
 		return
 	}
 

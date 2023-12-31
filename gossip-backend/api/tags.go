@@ -58,7 +58,7 @@ func CreateTag(context *gin.Context, db *sql.DB) {
 	var newTag models.Tag
 
 	if err := context.ShouldBindJSON(&newTag); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect input format"})
 		return
 	}
 

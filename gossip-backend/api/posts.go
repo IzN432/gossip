@@ -346,7 +346,7 @@ func CreatePost(context *gin.Context, db *sql.DB, requesterId int) {
 	var newPost models.Post
 
 	if err := context.ShouldBindJSON(&newPost); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect input format"})
 		return
 	}
 	
@@ -450,7 +450,7 @@ func UpdatePost(context *gin.Context, db *sql.DB, requesterRole string, requeste
 
 	// Bind the JSON to updatedPost
 	if err := context.ShouldBindJSON(&updatedPost); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect input format"})
 		return
 	}
 
