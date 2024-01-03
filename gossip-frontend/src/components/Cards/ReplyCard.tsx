@@ -39,7 +39,7 @@ function ReplyCard(props: ReplyCardProps) {
 	const user = getUser();
 
 	const hasEditPerm =
-		user.id === id || user.role === "superuser" || user.role === "admin";
+		user.id === owner.id || user.role === "superuser" || user.role === "admin";
 
 	const handleEditClick = () => {
 		setReplyDialogOpen(true);
