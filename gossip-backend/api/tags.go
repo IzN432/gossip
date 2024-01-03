@@ -49,11 +49,6 @@ func GetTags(context *gin.Context, db *sql.DB) {
 
 func CreateTag(context *gin.Context, db *sql.DB) {
 
-	// if (utils.RoleToPower(requesterRole) < 1) {
-	// 	context.JSON(http.StatusUnauthorized, gin.H{"error":"You are unauthorized to create new tags"})
-	// 	return
-	// }
-
 	// Bind JSON request to new tag
 	var newTag models.Tag
 
@@ -82,7 +77,7 @@ func CreateTag(context *gin.Context, db *sql.DB) {
 
 func DeleteTag(context *gin.Context, db *sql.DB, requesterRole string) {
 
-	if (utils.RoleToPower(requesterRole) < 1) {
+	if (utils.RoleToPower(requesterRole) <= 0) {
 		context.JSON(http.StatusUnauthorized, gin.H{"error":"You are unauthorized to create new tags"})
 		return
 	}

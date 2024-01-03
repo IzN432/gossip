@@ -107,7 +107,7 @@ func DeleteReply(context *gin.Context, db *sql.DB, requesterRole string, request
 		return
 	}
 
-	if utils.RoleToPower(requesterRole) <= 1 && requesterId != owner.ID {
+	if utils.RoleToPower(requesterRole) <= 0 && requesterId != owner.ID {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You do not have the authorization to delete that reply"})
 		return
 	}
@@ -155,7 +155,7 @@ func EditReply(context *gin.Context, db *sql.DB, requesterRole string, requester
 		return
 	}
 
-	if utils.RoleToPower(requesterRole) <= 1 && requesterId != owner.ID {
+	if utils.RoleToPower(requesterRole) <= 0 && requesterId != owner.ID {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You do not have the authorization to edit that reply"})
 		return
 	}

@@ -408,7 +408,7 @@ func DeletePost(context *gin.Context, db *sql.DB, requesterRole string, requeste
 		return
 	}
 
-	if (utils.RoleToPower(requesterRole) <= 1 && owner.ID != requesterId) {
+	if (utils.RoleToPower(requesterRole) <= 0 && owner.ID != requesterId) {
 		context.JSON(http.StatusUnauthorized, gin.H{"error":"You are not authorized to delete that post"})
 		return
 	}
@@ -443,7 +443,7 @@ func UpdatePost(context *gin.Context, db *sql.DB, requesterRole string, requeste
 		return
 	}
 
-	if (utils.RoleToPower(requesterRole) <= 1 && owner.ID != requesterId) {
+	if (utils.RoleToPower(requesterRole) <= 0 && owner.ID != requesterId) {
 		context.JSON(http.StatusUnauthorized, gin.H{"error":"You are not authorized to edit that post"})
 		return
 	}
