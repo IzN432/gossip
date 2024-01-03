@@ -10,6 +10,8 @@ Gossip is my submission for CVWO winter assignment AY23/24. It is hosted on AWS 
 git clone https://github.com/IzN432/gossip.git
 
 cd gossip
+
+rename template.env to .env and replace the dummy values with your postgres username and password
 ```
 
 ### Setting up the PostgreSQL
