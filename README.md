@@ -12,13 +12,10 @@ git clone https://github.com/IzN432/gossip.git
 cd gossip
 ```
 
-Rename template.env to .env and replace the dummy values with your postgres username and password
-
-
 ### Setting up the PostgreSQL
 
 1. Create a new database called gossip and run the SQL queries in database/database.sql
-2. Add your database username and password into the .env file
+2. Rename template.env to .env and add your database username and password into the .env file
    
 ### Starting front end
 
