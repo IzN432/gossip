@@ -15,8 +15,9 @@ import { useContext, useState } from "react";
 import { AnimationContext } from "../components/Wrappers/AnimationWrapper";
 import { useLoginMutation } from "../redux/api";
 import { UserLogin } from "../types/posts.interface";
-import { errorHandle, errorMessage } from "../utils/helper";
+import { errorMessage } from "../utils/helper";
 import toast from "react-hot-toast";
+import { setToken } from "../utils/auth";
 
 function SigninPage() {
 	const theme = useTheme();
@@ -66,12 +67,7 @@ function SigninPage() {
 		toast.promise(promise, {
 			loading: "Loading",
 			success: (payload) => {
-				localStorage.setItem("AuthToken", payload.data.token);
-				localStorage.setItem("user", JSON.stringify(payload.data.user));
-
-				const storageEvent = new Event("storage");
-				window.dispatchEvent(storageEvent);
-
+				setToken(payload.data.token);
 				return "Successfully logged in";
 			},
 			error: (e) => errorMessage(e, "Login"),

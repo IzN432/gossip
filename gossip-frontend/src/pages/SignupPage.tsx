@@ -15,8 +15,9 @@ import { useContext, useState } from "react";
 import { AnimationContext } from "../components/Wrappers/AnimationWrapper";
 import { useCreateUserMutation } from "../redux/api";
 import { UserForm } from "../types/posts.interface";
-import { errorHandle, errorMessage } from "../utils/helper";
+import { errorMessage } from "../utils/helper";
 import toast from "react-hot-toast";
+import { setToken } from "../utils/auth";
 
 function SignupPage() {
 	const theme = useTheme();
@@ -68,12 +69,7 @@ function SignupPage() {
 		toast.promise(promise, {
 			loading: "Loading",
 			success: (payload) => {
-				localStorage.setItem("AuthToken", payload.data.token);
-				localStorage.setItem("user", JSON.stringify(payload.data.user));
-
-				const storageEvent = new Event("storage");
-				window.dispatchEvent(storageEvent);
-
+				setToken(payload.data.token);
 				return "Successfully created new account";
 			},
 			error: (e) => errorMessage(e, "Account creation"),
