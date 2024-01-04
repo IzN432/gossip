@@ -1,13 +1,14 @@
 package utils
 
 func RoleToPower(a string) int {
-	if a == "superuser" {
+	switch a {
+	case "superuser":
 		return 2
-	} else if a == "admin" {
+	case "admin":
 		return 1
-	} else if a == "viewer" {
+	case "viewer":
 		return 0
-	} else {
+	default:
 		return -1
 	}
 }
