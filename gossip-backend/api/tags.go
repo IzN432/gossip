@@ -1,53 +1,35 @@
 package api
 
 import (
-	"database/sql"
 	"example/gossip/gossip-backend/models"
 	"example/gossip/gossip-backend/utils"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
-func GetTags(context *gin.Context, db *sql.DB) {
-
-	// standard query (multiple row)
-	rows, err := db.Query("SELECT id, description FROM tags")
-	if err != nil {
-		// internal server error if cannot find
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tags"})
+func GetTags(context *gin.Context, db *gorm.DB) {
+	var tags []models.Tag
+	if err := db.Find(&tags).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while retrieving tags: " + err.Error()})
 		return
 	}
 
-	// closes rows before exiting this function
-	defer rows.Close()
-
-	// this initializes to null slice
-	tags := []models.Tag{}
-
-	// loop through all rows
-	for rows.Next() {
-		var tag models.Tag
-
-		// rows.scan inserts the values from rows into the addresses given
-		err := rows.Scan(&tag.ID, &tag.Description)
-
-		if err != nil {
-			return
+	responseTags := []models.TagResponse{}
+	for _, tag := range tags {
+		responseTag := models.TagResponse {
+			ID: tag.ID,
+			Description: tag.Description,
 		}
-
-		// go handles append to null slice for you so no need initialize
-		tags = append(tags, tag)
-
+		responseTags = append(responseTags, responseTag)
 	}
-
 	// return tags
-	context.JSON(http.StatusOK, tags)
+	context.JSON(http.StatusOK, responseTags)
 }
 
-func CreateTag(context *gin.Context, db *sql.DB) {
+func CreateTag(context *gin.Context, db *gorm.DB) {
 
 	// Bind JSON request to new tag
 	var newTag models.Tag
@@ -56,26 +38,22 @@ func CreateTag(context *gin.Context, db *sql.DB) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect input format"})
 		return
 	}
-
 	newTag.Description = strings.Trim(newTag.Description, " ")
 	
-	// Insert into the database
-	err := db.QueryRow("INSERT INTO tags (description) VALUES ($1) RETURNING id", newTag.Description).Scan(&newTag.ID)
-	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			if err.Code == "23505" {
-				context.JSON(http.StatusBadRequest, gin.H{"error": "That tag already exists!"})
-				return
-			}
-		}
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create tag"})
+	if err := db.Create(&newTag).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while creating tags: " + err.Error()})
 		return
 	}
 
-	context.JSON(http.StatusCreated, gin.H{"message": "Successfully created tag", "data": newTag})
+	responseTag := models.TagResponse {
+		ID: newTag.ID,
+		Description: newTag.Description,
+	}
+
+	context.JSON(http.StatusCreated, gin.H{"message": "Successfully created tag", "data": responseTag})
 }
 
-func DeleteTag(context *gin.Context, db *sql.DB, requesterRole string) {
+func DeleteTag(context *gin.Context, db *gorm.DB, requesterRole string) {
 
 	if (utils.RoleToPower(requesterRole) <= 0) {
 		context.JSON(http.StatusUnauthorized, gin.H{"error":"You are unauthorized to create new tags"})
@@ -85,16 +63,8 @@ func DeleteTag(context *gin.Context, db *sql.DB, requesterRole string) {
 	// get id from url
 	id := context.Param("id")
 
-	result, err := db.Exec("DELETE FROM tags WHERE id = $1", id)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete tag"})
-		return
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		// Item not found
-		context.JSON(http.StatusNotFound, gin.H{"error": "Tag not found"})
+	if err := db.Where("id = ?", id).Delete(&models.Tag{}).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting tag: " + err.Error()})
 		return
 	}
 

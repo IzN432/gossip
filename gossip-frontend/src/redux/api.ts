@@ -12,6 +12,7 @@ import {
 	ReplyUpdateForm,
 	Tag,
 	TagForm,
+	User,
 	UserLogin,
 } from "../types/posts.interface";
 import {
@@ -138,6 +139,12 @@ export const api = createApi({
 				body: user,
 			}),
 		}),
+		getUser: builder.query<User, void>({
+			query: () => ({
+				url: `users`,
+				method: `GET`,
+			}),
+		}),
 
 		// LIKES
 		likeOrDislike: builder.mutation<Message<null>, LikeForm>({
@@ -145,13 +152,6 @@ export const api = createApi({
 				url: `likes/${like.post_id}`,
 				method: `POST`,
 				body: like,
-			}),
-			invalidatesTags: ["Post"],
-		}),
-		unlikeOrDislike: builder.mutation<Message<null>, number>({
-			query: (id) => ({
-				url: `likes/${id}`,
-				method: `DELETE`,
 			}),
 			invalidatesTags: ["Post"],
 		}),
@@ -173,11 +173,11 @@ export const {
 	useGetTagsQuery,
 	useCreateTagMutation,
 
+	useGetUserQuery,
 	useLoginMutation,
 	useCreateUserMutation,
 
 	useLikeOrDislikeMutation,
-	useUnlikeOrDislikeMutation,
 } = api;
 
 export const handleTokenExpiration: Middleware =

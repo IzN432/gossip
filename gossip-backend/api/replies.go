@@ -1,65 +1,47 @@
 package api
 
 import (
-	"database/sql"
 	"example/gossip/gossip-backend/models"
 	"example/gossip/gossip-backend/utils"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func GetReplies(context *gin.Context, db *sql.DB) {
+func GetReplies(context *gin.Context, db *gorm.DB) {
 
 	id := context.Param("post_id")
 
-	// standard query (multiple row)
-	rows, err := db.Query(`
-		SELECT 
-			replies.id, replies.content, replies.user_id, 
-			users.username, users.role, replies.post_id, replies.created_at 
-		FROM 
-			replies 
-		JOIN
-			users ON replies.user_id = users.id
-		WHERE 
-			post_id = $1`, id)
-
-	if err != nil {
-		// internal server error if cannot find
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve replies"})
+	var replies []models.Reply
+	if err := db.Preload("Owner").Where("post_id = ?", id).Find(&replies).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while retrieving replies: " + err.Error()})
 		return
 	}
 
-	// closes rows before exiting this function
-	defer rows.Close()
+	replyResponses := []models.ReplyResponse{}
 
-	replies := []models.Reply{}
-
-	// loop through all rows
-	for rows.Next() {
-		var reply models.Reply
-		var owner models.User
-		// rows.scan inserts the values from rows into the addresses given
-		err := rows.Scan(&reply.ID, &reply.Content, &owner.ID, &owner.Username, &owner.Role, &reply.PostID, &reply.CreatedAt)
-
-		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while querying replies: " + err.Error()})
-			return
+	for _, reply := range replies {
+		replyResponse := models.ReplyResponse {
+			ID: reply.ID,
+			CreatedAt: reply.CreatedAt,
+			Content: reply.Content,
+			PostID: reply.PostID,
+			Owner: models.UserResponse {
+				ID: reply.Owner.ID,
+				Username: reply.Owner.Username,
+				Role: reply.Owner.Role,
+			},
 		}
-
-		reply.Owner = owner
-
-		replies = append(replies, reply)
-
+		replyResponses = append(replyResponses, replyResponse)
 	}
 
 	// return replies
-	context.JSON(http.StatusOK, replies)
+	context.JSON(http.StatusOK, replyResponses)
 }
 
-func CreateReply(context *gin.Context, db *sql.DB, requesterId int) {
+func CreateReply(context *gin.Context, db *gorm.DB, requesterId uint) {
 
 	// Bind JSON request to new reply
 	var newReply models.Reply
@@ -70,68 +52,62 @@ func CreateReply(context *gin.Context, db *sql.DB, requesterId int) {
 	}
 
 	newReply.Content = strings.Trim(newReply.Content, " ")
-	
-	// Insert into the database
-	var owner models.User
-	err := db.QueryRow("INSERT INTO replies (content, post_id, user_id) VALUES ($1, $2, $3) RETURNING id, user_id", newReply.Content, newReply.PostID, requesterId).Scan(&newReply.ID, &owner.ID)
-	if err != nil {
+	newReply.UserID = requesterId
+
+	if err := db.Create(&newReply).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while creating reply: " + err.Error()})
 		return
 	}
-
-	err = db.QueryRow("SELECT username, role FROM users WHERE id = $1", owner.ID).Scan(&owner.Username, &owner.Role)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while searching for user: " + err.Error()})
-		return
-	}
-
-	newReply.Owner = owner
 	
-	context.JSON(http.StatusCreated, gin.H{"message":"Successfully created reply", "data":newReply})
+	context.JSON(http.StatusCreated, gin.H{"message":"Successfully created reply", "data": newReply})
 }
 
-func DeleteReply(context *gin.Context, db *sql.DB, requesterRole string, requesterId int) {
+func DeleteReply(context *gin.Context, db *gorm.DB, requesterRole string, requesterId uint) {
 	// get id from url
 	id := context.Param("id")
 
-	var owner models.User
-	var reply models.Reply
-
 	// authentication
-	err := db.QueryRow("SELECT id, content, post_id, user_id FROM replies WHERE id = $1", id).Scan(&reply.ID, &reply.Content, &reply.PostID, &owner.ID)
-	if err == sql.ErrNoRows {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "That reply does not exist!"})
-		return
-	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while querying reply: " + err.Error()})
+	var reply models.Reply
+	if err := db.Preload("Owner").First(&reply, "id = ?", id).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	if utils.RoleToPower(requesterRole) <= 0 && requesterId != owner.ID {
+	if utils.RoleToPower(requesterRole) <= 0 && requesterId != reply.Owner.ID {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You do not have the authorization to delete that reply"})
 		return
 	}
 
-	// execute delete
-	result, err := db.Exec("DELETE FROM replies WHERE id = $1", id)
-
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete reply"})
+	result := db.Where("id = ?", id).First(&reply)
+	if err := result.Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while querying reply: " + err.Error()})
+		return
+	}
+	if result.RowsAffected == 0 {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "That reply does not exist!"})
 		return
 	}
 
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		// Item not found
-		context.JSON(http.StatusNotFound, gin.H{"error": "Reply not found"})
+	if err := db.Where("id = ?", id).Delete(&reply).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while deleting reply: " + err.Error()})
 		return
 	}
 
 	context.JSON(http.StatusOK, gin.H{"message": "Reply deleted", "data": reply})
 }
 
-func EditReply(context *gin.Context, db *sql.DB, requesterRole string, requesterId int) {
+func EditReply(context *gin.Context, db *gorm.DB, requesterRole string, requesterId uint) {
 	id := context.Param("id")
+	
+	var reply models.Reply
+	if err := db.Preload("Owner").First(&reply, "id = ?", id).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if utils.RoleToPower(requesterRole) <= 0 && requesterId != reply.Owner.ID {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "You do not have the authorization to edit that reply"})
+		return
+	}
 
 	var updatedReply models.Reply
 
@@ -143,26 +119,8 @@ func EditReply(context *gin.Context, db *sql.DB, requesterRole string, requester
 
 	updatedReply.Content = strings.Trim(updatedReply.Content, " ")
 
-	var owner models.User
-
-	// authentication
-	err := db.QueryRow("SELECT user_id FROM replies WHERE id = $1", id).Scan(&owner.ID)
-	if err == sql.ErrNoRows {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "That reply does not exist!"})
-		return
-	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while querying reply: " + err.Error()})
-		return
-	}
-
-	if utils.RoleToPower(requesterRole) <= 0 && requesterId != owner.ID {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "You do not have the authorization to edit that reply"})
-		return
-	}
-	
-	err = db.QueryRow("UPDATE replies SET content = $1 WHERE id = $2 RETURNING id, post_id", updatedReply.Content, id).Scan(&updatedReply.ID, &updatedReply.PostID)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update reply"})
+	if err := db.Where("id = ?", id).Updates(&updatedReply).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while updating reply: " + err.Error()})
 		return
 	}
 

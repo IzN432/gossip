@@ -18,7 +18,7 @@ func HashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
-func GenerateToken(id int, role string) (string, error) {
+func GenerateToken(id uint, role string) (string, error) {
 	secretKey := []byte("YXlQrZHFWD2bBn5sJpSuhSF5sBIWIx4r")
 
 	token := jwt.New(jwt.SigningMethodHS256)
@@ -37,15 +37,15 @@ func GenerateToken(id int, role string) (string, error) {
 	return signedToken, nil
 }
 
-func AuthenticateUser(authHeader string) (bool, string, int, error) {
+func AuthenticateUser(authHeader string) (bool, string, uint, error) {
 	secretKey := []byte("YXlQrZHFWD2bBn5sJpSuhSF5sBIWIx4r")
 	if authHeader == "" {
-		return false, "", -1, fmt.Errorf("Unauthorized")
+		return false, "", 0, fmt.Errorf("Unauthorized")
 	}
 
 	token, err := extractToken(authHeader)
 	if err != nil {
-		return false, "", -1, err
+		return false, "", 0, err
 	}
 
 	parsedToken, err := jwt.Parse(token, func (token *jwt.Token) (interface{}, error) {
@@ -58,19 +58,19 @@ func AuthenticateUser(authHeader string) (bool, string, int, error) {
 	})
 
 	if err != nil {
-		return false, "", -1, err
+		return false, "", 0, err
 	}
 	
 	if parsedToken.Valid {
 		claims := parsedToken.Claims.(jwt.MapClaims)
-		return true, claims["role"].(string), int(claims["id"].(float64)), nil
+		return true, claims["role"].(string), uint(claims["id"].(float64)), nil
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
 		if ve.Errors&jwt.ValidationErrorExpired != 0 {
-			return true, "", -1, fmt.Errorf("Token has expired")
+			return true, "", 0, fmt.Errorf("Token has expired")
 		}
 	}
 
-	return false, "", -1, fmt.Errorf("Unauthorized")
+	return false, "", 0, fmt.Errorf("Unauthorized")
 }
 
 func extractToken(authHeader string) (string, error) {

@@ -1,7 +1,7 @@
 package api
 
 import (
-	"database/sql"
+	"errors"
 	"example/gossip/gossip-backend/models"
 	"example/gossip/gossip-backend/utils"
 	"net/http"
@@ -9,12 +9,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
-func SigninUser(context *gin.Context, db *sql.DB) {
-	
+func SigninUser(context *gin.Context, db *gorm.DB) {
+
 	var signinUser models.User
 	var databaseUser models.User
 
@@ -23,17 +23,12 @@ func SigninUser(context *gin.Context, db *sql.DB) {
 		return
 	}
 
-	err := db.QueryRow("SELECT id, role, password FROM users WHERE UPPER(username) LIKE UPPER($1)", signinUser.Username).Scan(&databaseUser.ID, &databaseUser.Role, &databaseUser.Password)
-	if err == sql.ErrNoRows {
+	err := db.Where("UPPER(username) LIKE UPPER(?)", signinUser.Username).First(&databaseUser).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		context.JSON(http.StatusUnauthorized, gin.H{"error":"Username not found"})
 		return
-	} else if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while searching for user: " + err.Error()})
-		return
-	}
-
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while hashing password: " + err.Error()})
+	} else if (err != nil) {
+		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while querying database: " + err.Error()})
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(databaseUser.Password), []byte(signinUser.Password))
@@ -48,7 +43,13 @@ func SigninUser(context *gin.Context, db *sql.DB) {
 		return
 	}
 
-	var returnUser models.User
+	type responseParams struct {
+		ID			uint		`json:"id"`
+		Username	string		`json:"username"`
+		Role		string		`json:"role"`
+	}
+
+	var returnUser responseParams
 	returnUser.ID = databaseUser.ID
 	returnUser.Username = signinUser.Username
 	returnUser.Role = databaseUser.Role
@@ -57,7 +58,8 @@ func SigninUser(context *gin.Context, db *sql.DB) {
 	context.JSON(http.StatusOK, gin.H{"message": "Successfully signed in", "data": payload})
 }
 
-func CreateUser(context *gin.Context, db *sql.DB, requesterRole string) {
+func CreateUser(context *gin.Context, db *gorm.DB, requesterRole string) {
+	
 	// Bind JSON request to new tag
 	var newUser models.User
 
@@ -65,7 +67,6 @@ func CreateUser(context *gin.Context, db *sql.DB, requesterRole string) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect format"})
 		return
 	}
-
 	if strings.Contains(newUser.Password, " ") {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Password cannot contain spaces!"})
 		return
@@ -99,9 +100,8 @@ func CreateUser(context *gin.Context, db *sql.DB, requesterRole string) {
 	}
 
 	// Check that username is unique
-	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM users WHERE UPPER(username) LIKE UPPER($1)", newUser.Username).Scan(&count)
-	if err != nil {
+	var count int64
+	if err := db.Model(&models.User{}).Where("UPPER(username) LIKE UPPER(?)", newUser.Username).Count(&count).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while checking for username availability: " + err.Error()})
 		return
 	}
@@ -117,14 +117,9 @@ func CreateUser(context *gin.Context, db *sql.DB, requesterRole string) {
 		return
 	}
 
-	err = db.QueryRow("INSERT INTO users (username, password, role) VALUES ($1, $2, $3) RETURNING id", newUser.Username, hashedPassword, newUser.Role).Scan(&newUser.ID)
-	if err, ok := err.(*pq.Error); ok {
-		if err.Constraint == "user_check_min_length_username" {
-			context.JSON(http.StatusBadRequest, gin.H{"error": "Username should be at least 4 characters long!"})
-			return
-		}
-	}
-	if err != nil {
+	newUser.Password = hashedPassword
+
+	if err := db.Create(&newUser).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while creating user: " + err.Error()})
 		return
 	}
@@ -138,32 +133,44 @@ func CreateUser(context *gin.Context, db *sql.DB, requesterRole string) {
 	context.JSON(http.StatusCreated, gin.H{"message": "Successfully created a new user", "data": gin.H{"token": token, "user": newUser}})
 }
 
-func DeleteUser(context *gin.Context, db *sql.DB, requesterRole string, requesterId int) {
-
-	// get id from url
-	id := context.Param("id")
-
-	// authentication
+func GetUser(context *gin.Context, db *gorm.DB, requesterId uint) {
 	var user models.User
-	err := db.QueryRow("SELECT id, username, password, role FROM users WHERE id = $1", id).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
-
-	if utils.RoleToPower(user.Role) >= utils.RoleToPower(requesterRole) && requesterId != user.ID {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "You do not have the authorization to delete that user"})
+	if err := db.First(&user, requesterId).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while accessing user: " + err.Error()})
 		return
 	}
 
-	result, err := db.Exec("DELETE FROM users WHERE id = $1", id)
+	responseUser := models.UserResponse{ ID: user.ID, Username: user.Username, Role: user.Role }
 
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
-		return
-	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		context.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
-	context.JSON(http.StatusOK, gin.H{"message": "User deleted"})
+	context.JSON(http.StatusOK, responseUser)
 }
+
+// func DeleteUser(context *gin.Context, db *gorm.DB, requesterRole string, requesterId int) {
+
+// 	// get id from url
+// 	id := context.Param("id")
+
+// 	// authentication
+// 	var user models.User
+// 	err := db.QueryRow("SELECT id, username, password, role FROM users WHERE id = ?", id).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
+
+// 	if utils.RoleToPower(user.Role) >= utils.RoleToPower(requesterRole) && requesterId != user.ID {
+// 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You do not have the authorization to delete that user"})
+// 		return
+// 	}
+
+// 	result, err := db.Exec("DELETE FROM users WHERE id = ?", id)
+
+// 	if err != nil {
+// 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+// 		return
+// 	}
+
+// 	rowsAffected, _ := result.RowsAffected()
+// 	if rowsAffected == 0 {
+// 		context.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+// 		return
+// 	}
+
+// 	context.JSON(http.StatusOK, gin.H{"message": "User deleted"})
+// }

@@ -16,7 +16,6 @@ import { RelativeToNow } from "../../utils/time";
 import {
 	useDeletePostMutation,
 	useLikeOrDislikeMutation,
-	useUnlikeOrDislikeMutation,
 } from "../../redux/api";
 import { getUser } from "../../utils/auth";
 import EditIcon from "@mui/icons-material/Edit";
@@ -46,7 +45,6 @@ function DisplayCard(props: DisplayCardProps) {
 	const open = Boolean(anchorEl);
 
 	const [likeOrDislike] = useLikeOrDislikeMutation();
-	const [unlikeOrDislike] = useUnlikeOrDislikeMutation();
 
 	const [deletePost] = useDeletePostMutation();
 
@@ -58,8 +56,8 @@ function DisplayCard(props: DisplayCardProps) {
 
 	const hasEditPerms =
 		user.id === post.owner.id ||
-		user.role == "superuser" ||
-		user.role == "admin";
+		user.role === "superuser" ||
+		user.role === "admin";
 
 	const tagLimit = isSmall ? 1 : hasEditPerms ? 3 : 4;
 
@@ -77,14 +75,19 @@ function DisplayCard(props: DisplayCardProps) {
 	};
 
 	const handleHeartClick = () => {
-		if (post.like.interacted && post.like.like_or_dislike) {
-			unlikeOrDislike(post.id)
+		if (post.like.like) {
+			likeOrDislike({
+				like: false,
+				dislike: false,
+				post_id: post.id,
+			})
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
 		} else {
 			likeOrDislike({
-				like_or_dislike: true,
+				like: true,
+				dislike: false,
 				post_id: post.id,
 			})
 				.unwrap()
@@ -219,9 +222,7 @@ function DisplayCard(props: DisplayCardProps) {
 					}).format(post.likes)}
 				</Typography>
 				<HeartButton
-					filled={
-						(post.like.interacted && post.like.like_or_dislike) || hasEditPerms
-					}
+					filled={post.like.like || hasEditPerms}
 					handleClick={handleHeartClick}
 				/>
 				{hasEditPerms && !isSmall && (

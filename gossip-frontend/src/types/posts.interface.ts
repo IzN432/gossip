@@ -94,12 +94,12 @@ export interface ReplyUpdateForm {
 
 export interface Like {
 	interacted: boolean;
-	like_or_dislike: boolean;
-	post_id: number;
-	user_id: number;
+	like: boolean;
+	dislike: boolean;
 }
 
 export interface LikeForm {
-	like_or_dislike: boolean;
+	like: boolean;
+	dislike: boolean;
 	post_id: number;
 }

@@ -28,7 +28,6 @@ import {
 	useGetPostByIdQuery,
 	useGetRepliesByPostIDQuery,
 	useLikeOrDislikeMutation,
-	useUnlikeOrDislikeMutation,
 } from "../redux/api";
 import { getUser } from "../utils/auth";
 import { errorHandle } from "../utils/helper";
@@ -69,7 +68,6 @@ function ViewPost() {
 
 	const [deletePost] = useDeletePostMutation();
 	const [likeOrDislike] = useLikeOrDislikeMutation();
-	const [unlikeOrDislike] = useUnlikeOrDislikeMutation();
 
 	// Popover
 	const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -77,20 +75,20 @@ function ViewPost() {
 
 	const hasEditPerms =
 		post?.owner.id === user.id ||
-		user.role == "admin" ||
-		user.role == "superuser";
+		user.role === "admin" ||
+		user.role === "superuser";
 
 	const tagLimit: number = isSmall ? 1 : 4;
 
 	//  listener functions
 	const handleHeartClick = () => {
-		if (post!.like.interacted && post!.like.like_or_dislike) {
-			unlikeOrDislike(post!.id)
+		if (post!.like.like) {
+			likeOrDislike({ like: false, dislike: false, post_id: post!.id })
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
 		} else {
-			likeOrDislike({ like_or_dislike: true, post_id: post!.id })
+			likeOrDislike({ like: true, dislike: false, post_id: post!.id })
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
@@ -98,13 +96,13 @@ function ViewPost() {
 	};
 
 	const handleDislikeClick = () => {
-		if (post!.like.interacted && !post!.like.like_or_dislike) {
-			unlikeOrDislike(post!.id)
+		if (post!.like.dislike) {
+			likeOrDislike({ like: false, dislike: false, post_id: post!.id })
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
 		} else {
-			likeOrDislike({ like_or_dislike: false, post_id: post!.id })
+			likeOrDislike({ like: false, dislike: true, post_id: post!.id })
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
@@ -378,10 +376,7 @@ function ViewPost() {
 										}}
 									>
 										<HeartButton
-											filled={
-												(post!.like.interacted && post!.like.like_or_dislike) ||
-												hasEditPerms
-											}
+											filled={post!.like.like || hasEditPerms}
 											handleClick={handleHeartClick}
 										/>
 										<Typography
@@ -401,11 +396,7 @@ function ViewPost() {
 									</Box>
 									<Box sx={{ display: "flex" }}>
 										<DislikeButton
-											filled={
-												(post!.like.interacted &&
-													!post!.like.like_or_dislike) ||
-												hasEditPerms
-											}
+											filled={post!.like.dislike || hasEditPerms}
 											handleClick={handleDislikeClick}
 										/>
 										<Typography

@@ -10,15 +10,11 @@ function calculateLikeness(a: PostMini): number {
 }
 
 function removeSelfLike(a: PostMini): number {
-	return (
-		a.likes - (a.like.interacted && a.like.like_or_dislike === true ? 1 : 0)
-	);
+	return a.likes - (a.like.like ? 1 : 0);
 }
 
 function removeSelfDislike(a: PostMini): number {
-	return (
-		a.dislikes - (a.like.interacted && a.like.like_or_dislike === false ? 1 : 0)
-	);
+	return a.dislikes - (a.like.dislike ? 1 : 0);
 }
 
 export function errorHandle(error: any, origin: string) {

@@ -6,7 +6,7 @@ import {
 	DialogTitle,
 	TextField,
 } from "@mui/material";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useState } from "react";
 
 interface ReplyDialogProps {
 	open: boolean;
@@ -68,7 +68,6 @@ function ReplyDialog(props: ReplyDialogProps) {
 					error={!!error}
 					helperText={error}
 					autoComplete="off"
-					defaultValue={value || ""}
 					value={replyContent}
 					multiline
 					focused

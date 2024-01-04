@@ -2,6 +2,7 @@ package main
 
 import (
 	"example/gossip/gossip-backend/api"
+	"example/gossip/gossip-backend/models"
 	"example/gossip/gossip-backend/utils"
 	"flag"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"database/sql"
 	"log"
 
 	"github.com/gin-contrib/cors"
@@ -17,10 +17,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // address of db is stored
-var db *sql.DB
+var db *gorm.DB
 
 func main() {
 	
@@ -45,10 +47,14 @@ func main() {
 	} 
 
 	// connect to the database
-	connect := fmt.Sprintf("host=%s user=%s password=%s dbname=gossip port=5432 sslmode=%s",
+	connect := fmt.Sprintf("host=%s user=%s password=%s dbname=gossip_test port=5432 sslmode=%s",
 						os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_SSLMODE"))
+	
+	
+	
 	var err error
-	db, err = sql.Open("postgres", connect)
+	// Logger: logger.Default.LogMode(logger.Info),
+	db, err = gorm.Open(postgres.Open(connect), &gorm.Config{})
 	
 	// checks for error
 	if err != nil {
@@ -56,12 +62,18 @@ func main() {
 		return
 	}
 
-	if err := db.Ping(); err != nil {
-        log.Fatal("Error pinging database:", err)
-    }
 
-	// closes the db before exiting this function
-	defer db.Close()
+	err = db.AutoMigrate(&models.Post{})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	err = db.AutoMigrate(&models.User{}, &models.Tag{}, &models.Reply{}, &models.Like{})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
 	// setup the router and the routes
 	router := gin.Default()
@@ -195,29 +207,38 @@ func main() {
 
 			api.CreateUser(context, db, requesterRole)
 		})
-		subpath.DELETE("/users/:id", func(context *gin.Context) {
-			success, requesterRole, requesterId, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
+		subpath.GET("/users", func(context *gin.Context) {
+			success, _, requesterId, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
 			if (!success || err != nil) {
 				context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
 				return
 			}
 
-			api.DeleteUser(context, db, requesterRole, requesterId)
+			api.GetUser(context, db, requesterId)
 		})
-		subpath.GET("/users/:id/posts", func(context *gin.Context) {
-			success, _, _, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
-			if (!success) {
-				context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
-				return
-			}
+		// subpath.DELETE("/users/:id", func(context *gin.Context) {
+		// 	success, requesterRole, requesterId, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
+		// 	if (!success || err != nil) {
+		// 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
+		// 		return
+		// 	}
 
-			if (err != nil) {
-				context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-				return
-			}
+		// 	api.DeleteUser(context, db, requesterRole, requesterId)
+		// })
+		// subpath.GET("/users/:id/posts", func(context *gin.Context) {
+		// 	success, _, _, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
+		// 	if (!success) {
+		// 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
+		// 		return
+		// 	}
 
-			api.GetUserPosts(context, db)
-		})
+		// 	if (err != nil) {
+		// 		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		// 		return
+		// 	}
+
+		// 	api.GetUserPosts(context, db)
+		// })
 
 		subpath.POST("/likes/:id", func(context *gin.Context) {
 			success, _, requesterId, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
@@ -231,35 +252,7 @@ func main() {
 				return
 			}
 
-			api.LikePost(context, db, requesterId)
-		})
-		subpath.DELETE("/likes/:id", func(context *gin.Context) {
-			success, _, requesterId, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
-			if (!success) {
-				context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
-				return
-			}
-
-			if (err != nil) {
-				context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-				return
-			}
-
-			api.UnlikePost(context, db, requesterId)
-		})
-		subpath.GET("/likes", func(context *gin.Context) {
-			success, _, requesterId, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
-			if (!success) {
-				context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
-				return
-			}
-
-			if (err != nil) {
-				context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-				return
-			}
-
-			api.GetLikes(context, db, requesterId)
+			api.CreateLike(context, db, requesterId)
 		})
 	}
 

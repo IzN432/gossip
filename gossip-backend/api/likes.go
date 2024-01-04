@@ -1,98 +1,77 @@
 package api
 
 import (
-	"database/sql"
 	"example/gossip/gossip-backend/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func LikePost(context *gin.Context, db *sql.DB, requesterId int) {
-	id := context.Param("id")
+func CreateLike(context *gin.Context, db *gorm.DB, requesterId uint) {
 
-	var like models.Like
-	if err := context.ShouldBindJSON(&like); err != nil {
+	param, err := strconv.ParseUint(context.Param("id"), 10, 0)
+	if err != nil || param > uint64(^uint(0)) {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while parsing PostID: " + err.Error()})
+		return
+	}
+
+	postId := uint(param)
+
+	// retrieve the json and put it into a struct
+	type requestParams struct {
+		Like		bool	`json:"like"`
+		Dislike		bool	`json:"dislike"`
+	}
+
+	var likeForm requestParams
+	if err := context.ShouldBindJSON(&likeForm); err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while parsing JSON: " + err.Error()})
 		return
 	}
-
-	_, err := db.Exec("DELETE FROM likes WHERE post_id = ($1) AND user_id = ($2)", id, requesterId)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting from database: " + err.Error()})
+	
+	// Check for self likers
+	var post models.Post
+	if err := db.First(&post, postId).Error; err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while querying database: " + err.Error()})
 		return
 	}
 
-	var userID int
-	err = db.QueryRow("SELECT u.id FROM users u INNER JOIN posts p ON p.user_id = u.id WHERE p.id = $1", id).Scan(&userID)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while checking database for self-likers: " + err.Error()})
-		return
-	}
-
-	if userID == requesterId {
+	if post.OwnerID == requesterId {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "No liking your own posts is allowed."})
 		return
 	}
-	_, err = db.Exec("INSERT INTO likes (like_or_dislike, post_id, user_id) VALUES ($1, $2, $3)", like.LikeOrDislike, id, requesterId)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while inserting into database: " + err.Error()})
-		return
-	}
 
-	var message string
-	if like.LikeOrDislike {
-		message = "liked"
-	} else {
-		message = "disliked"
-	}
-	context.JSON(http.StatusOK, gin.H{"message": "Successfully " + message + " the post"})
-}
-
-func UnlikePost(context *gin.Context, db *sql.DB, requesterId int) {
-	id := context.Param("id")
-
+	// Insert the like
 	var like models.Like
-	err := db.QueryRow("SELECT like_or_dislike FROM likes WHERE post_id = $1 AND user_id = $2", id, requesterId).Scan(&like.LikeOrDislike)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while querying database" + err.Error()})
+	result := db.FirstOrCreate(&like, models.Like{PostID: postId, UserID: requesterId})
+	if result.Error != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while querying database: " + result.Error.Error()})
 		return
 	}
 
-	_, err = db.Exec("DELETE FROM likes WHERE post_id = $1 AND user_id = $2", id, requesterId)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting from database" + err.Error()})
+	if likeForm.Like == likeForm.Dislike && likeForm.Like {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request structure"})
+		return
+	}
+	
+	if err := db.Model(&like).Where("user_id = ? AND post_id = ?", requesterId, postId).
+					Update("Like", likeForm.Like).
+					Update("Dislike", likeForm.Dislike).Error; 
+					err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while updating like: " + err.Error()})
 		return
 	}
 
 	var message string
-	if like.LikeOrDislike {
-		message = "unliked"
+	if likeForm.Like {
+		message = "liked the post"
+	} else if likeForm.Dislike {
+		message = "disliked the post"
 	} else {
-		message = "undisliked"
+		message = "unreacted to the post"
 	}
 
-	context.JSON(http.StatusOK, gin.H{"message": "Successfully " + message + " the post"})
-}
-
-func GetLikes(context *gin.Context, db *sql.DB, requesterId int) {
-	likes := []models.Like{}
-
-	rows, err := db.Query("SELECT like_or_dislike, post_id, user_id FROM likes WHERE user_id = $1", requesterId)
-	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while querying likes: " + err.Error()})
-		return
-	}
-	for rows.Next() {
-		var like models.Like
-		err := rows.Scan(&like.LikeOrDislike, &like.PostID, &like.UserID)
-		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while parsing likes: " + err.Error()})
-			return
-		}
-
-		likes = append(likes, like)
-	}
-
-	context.JSON(http.StatusOK, likes)
+	context.JSON(http.StatusOK, gin.H{"message": "Successfully " + message})
 }
