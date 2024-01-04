@@ -11,8 +11,11 @@ import { RelativeToNow } from "../../utils/time";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useState } from "react";
-import { getUser } from "../../utils/auth";
-import { useDeleteReplyMutation, useEditReplyMutation } from "../../redux/api";
+import {
+	useDeleteReplyMutation,
+	useEditReplyMutation,
+	useGetUserQuery,
+} from "../../redux/api";
 import DeleteDialog from "../Dialogs/DeleteDialog";
 import toast from "react-hot-toast";
 import ReplyDialog from "../Dialogs/ReplyDialog";
@@ -36,10 +39,11 @@ function ReplyCard(props: ReplyCardProps) {
 	const [editReply] = useEditReplyMutation();
 	const [deleteReply] = useDeleteReplyMutation();
 
-	const user = getUser();
+	const { data: user } = useGetUserQuery();
 
-	const hasEditPerm =
-		user.id === owner.id || user.role === "superuser" || user.role === "admin";
+	const hasEditPerm = user
+		? user.id === owner.id || user.role === "superuser" || user.role === "admin"
+		: false;
 
 	const handleEditClick = () => {
 		setReplyDialogOpen(true);

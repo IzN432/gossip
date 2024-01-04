@@ -27,9 +27,9 @@ import {
 	useDeletePostMutation,
 	useGetPostByIdQuery,
 	useGetRepliesByPostIDQuery,
+	useGetUserQuery,
 	useLikeOrDislikeMutation,
 } from "../redux/api";
-import { getUser } from "../utils/auth";
 import { errorHandle } from "../utils/helper";
 import { CompareDates, RelativeToNow } from "../utils/time";
 
@@ -44,7 +44,7 @@ function ViewPost() {
 	const navigate = useContext(AnimationContext)!;
 
 	// retrieve user
-	const user = getUser();
+	const { data: user } = useGetUserQuery();
 
 	// send request to retrieve the post
 	const {
@@ -73,10 +73,11 @@ function ViewPost() {
 	const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 	const open = Boolean(anchorEl);
 
-	const hasEditPerms =
-		post?.owner.id === user.id ||
-		user.role === "admin" ||
-		user.role === "superuser";
+	const hasEditPerms = user
+		? post?.owner.id === user.id ||
+		  user.role === "admin" ||
+		  user.role === "superuser"
+		: false;
 
 	const tagLimit: number = isSmall ? 1 : 4;
 

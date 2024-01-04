@@ -216,29 +216,6 @@ func main() {
 
 			api.GetUser(context, db, requesterId)
 		})
-		// subpath.DELETE("/users/:id", func(context *gin.Context) {
-		// 	success, requesterRole, requesterId, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
-		// 	if (!success || err != nil) {
-		// 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
-		// 		return
-		// 	}
-
-		// 	api.DeleteUser(context, db, requesterRole, requesterId)
-		// })
-		// subpath.GET("/users/:id/posts", func(context *gin.Context) {
-		// 	success, _, _, err := utils.AuthenticateUser(context.GetHeader("Authorization"))
-		// 	if (!success) {
-		// 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized"})
-		// 		return
-		// 	}
-
-		// 	if (err != nil) {
-		// 		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		// 		return
-		// 	}
-
-		// 	api.GetUserPosts(context, db)
-		// })
 
 		subpath.POST("/likes/:id", func(context *gin.Context) {
 			success, _, requesterId, err := utils.AuthenticateUser(context.GetHeader("Authorization"))

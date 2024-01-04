@@ -41,7 +41,6 @@ export interface PostForm {
 	title: string;
 	content: string;
 	tags: Tag[];
-	owner: User;
 }
 
 export interface PostUpdateForm {
@@ -49,7 +48,6 @@ export interface PostUpdateForm {
 	title: string;
 	content: string;
 	tags: Tag[];
-	owner: User;
 }
 
 export interface Post {

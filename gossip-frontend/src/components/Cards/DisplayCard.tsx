@@ -15,9 +15,9 @@ import HeartButton from "../Buttons/HeartButton";
 import { RelativeToNow } from "../../utils/time";
 import {
 	useDeletePostMutation,
+	useGetUserQuery,
 	useLikeOrDislikeMutation,
 } from "../../redux/api";
-import { getUser } from "../../utils/auth";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import toast from "react-hot-toast";
@@ -52,12 +52,13 @@ function DisplayCard(props: DisplayCardProps) {
 
 	const tagList = post.tags;
 
-	const user = getUser();
+	const { data: user } = useGetUserQuery();
 
-	const hasEditPerms =
-		user.id === post.owner.id ||
-		user.role === "superuser" ||
-		user.role === "admin";
+	const hasEditPerms = user
+		? user.id === post.owner.id ||
+		  user.role === "superuser" ||
+		  user.role === "admin"
+		: false;
 
 	const tagLimit = isSmall ? 1 : hasEditPerms ? 3 : 4;
 

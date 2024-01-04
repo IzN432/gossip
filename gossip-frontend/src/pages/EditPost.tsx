@@ -20,7 +20,6 @@ import {
 	useGetTagsQuery,
 } from "../redux/api";
 import { PostUpdateForm, Tag } from "../types/posts.interface";
-import { getUser } from "../utils/auth";
 import { errorHandle } from "../utils/helper";
 
 function EditPost() {
@@ -114,7 +113,6 @@ function EditPost() {
 			title: title,
 			content: content,
 			tags: tagList,
-			owner: getUser(),
 		};
 
 		editPost(postFormData)

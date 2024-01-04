@@ -15,7 +15,6 @@ import Loading from "../components/Loading";
 import { AnimationContext } from "../components/Wrappers/AnimationWrapper";
 import { useCreatePostMutation, useGetTagsQuery } from "../redux/api";
 import { PostForm, Tag } from "../types/posts.interface";
-import { getUser } from "../utils/auth";
 import { errorHandle } from "../utils/helper";
 
 function CreatePost() {
@@ -79,7 +78,6 @@ function CreatePost() {
 			title: title,
 			content: content,
 			tags: tagList,
-			owner: getUser(),
 		};
 
 		createPost(postFormData)

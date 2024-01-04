@@ -144,33 +144,3 @@ func GetUser(context *gin.Context, db *gorm.DB, requesterId uint) {
 
 	context.JSON(http.StatusOK, responseUser)
 }
-
-// func DeleteUser(context *gin.Context, db *gorm.DB, requesterRole string, requesterId int) {
-
-// 	// get id from url
-// 	id := context.Param("id")
-
-// 	// authentication
-// 	var user models.User
-// 	err := db.QueryRow("SELECT id, username, password, role FROM users WHERE id = ?", id).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
-
-// 	if utils.RoleToPower(user.Role) >= utils.RoleToPower(requesterRole) && requesterId != user.ID {
-// 		context.JSON(http.StatusUnauthorized, gin.H{"error": "You do not have the authorization to delete that user"})
-// 		return
-// 	}
-
-// 	result, err := db.Exec("DELETE FROM users WHERE id = ?", id)
-
-// 	if err != nil {
-// 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
-// 		return
-// 	}
-
-// 	rowsAffected, _ := result.RowsAffected()
-// 	if rowsAffected == 0 {
-// 		context.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-// 		return
-// 	}
-
-// 	context.JSON(http.StatusOK, gin.H{"message": "User deleted"})
-// }
