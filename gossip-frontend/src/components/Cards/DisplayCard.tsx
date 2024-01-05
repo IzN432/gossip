@@ -301,7 +301,7 @@ function DisplayCard(props: DisplayCardProps) {
 
 				{tagList.length > tagLimit && (
 					<Chip
-						label="others"
+						label={tagLimit === 1 ? "tags" : "others"}
 						color="error"
 						sx={{
 							":hover": {
