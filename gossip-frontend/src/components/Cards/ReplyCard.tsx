@@ -60,7 +60,10 @@ function ReplyCard(props: ReplyCardProps) {
 		if (success) {
 			editReply({ id: id, content: replyContent, post_id: post_id })
 				.unwrap()
-				.then(() => refetch())
+				.then((payload) => {
+					toast(payload.message);
+					refetch();
+				})
 				.catch((e) => errorHandle(e, "Reply deletion"));
 		}
 	};
