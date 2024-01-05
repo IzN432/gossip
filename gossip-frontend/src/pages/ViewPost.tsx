@@ -544,7 +544,7 @@ function ViewPost() {
 								<Loading />
 							) : (
 								[...(replies || [])]
-									.sort((a, b) => CompareDates(a.created_at, b.created_at))
+									.sort((a, b) => CompareDates(b.created_at, a.created_at))
 									.map((reply) => (
 										<ReplyCard
 											reply={reply}
