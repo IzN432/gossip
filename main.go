@@ -19,6 +19,7 @@ import (
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // address of db is stored
@@ -47,14 +48,14 @@ func main() {
 	} 
 
 	// connect to the database
-	connect := fmt.Sprintf("host=%s user=%s password=%s dbname=gossip_test port=5432 sslmode=%s",
+	connect := fmt.Sprintf("host=%s user=%s password=%s dbname=gossip port=5432 sslmode=%s",
 						os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_SSLMODE"))
 	
 	
 	
 	var err error
-	// Logger: logger.Default.LogMode(logger.Info),
-	db, err = gorm.Open(postgres.Open(connect), &gorm.Config{})
+	
+	db, err = gorm.Open(postgres.Open(connect), &gorm.Config{Logger: logger.Default.LogMode(logger.Info),})
 	
 	// checks for error
 	if err != nil {

@@ -63,7 +63,7 @@ func DeleteTag(context *gin.Context, db *gorm.DB, requesterRole string) {
 	// get id from url
 	id := context.Param("id")
 
-	if err := db.Where("id = ?", id).Delete(&models.Tag{}).Error; err != nil {
+	if err := db.Where("\"id\" = ?", id).Delete(&models.Tag{}).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting tag: " + err.Error()})
 		return
 	}

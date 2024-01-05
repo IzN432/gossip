@@ -17,8 +17,7 @@ func GetPosts(context *gin.Context, db *gorm.DB, requesterId uint) {
 	
 	if err := db.Preload("Owner").
 				Preload("Tags").
-				Preload("Likes").
-				Joins("left join \"likes\" ON \"likes\".user_id = ?", requesterId).
+				Preload("Likes", "\"user_id\" = ?", requesterId).
 				Find(&posts).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while retrieving posts: " + err.Error()})
 		return
@@ -71,7 +70,7 @@ func GetPost(context *gin.Context, db *gorm.DB, requesterId uint) {
 	id := context.Param("id")
 
 	var post models.Post
-	if err := db.Preload("Owner").Preload("Tags").Preload("Likes").Joins("left join \"likes\" ON \"likes\".\"user_id\" = ?", requesterId).First(&post, "\"posts\".\"id\" = ?", id).Error; err != nil {
+	if err := db.Preload("Owner").Preload("Tags").Preload("Likes", "\"user_id\" = ?", requesterId).First(&post, "\"posts\".\"id\" = ?", id).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while retrieving posts: " + err.Error()})
 		return
 	}
@@ -79,8 +78,8 @@ func GetPost(context *gin.Context, db *gorm.DB, requesterId uint) {
 	var numLikes int64
 	var numDislikes int64
 
-	db.Model(&models.Like{}).Where("post_id = ? AND \"like\" = ?", post.ID, true).Count(&numLikes)
-	db.Model(&models.Like{}).Where("post_id = ? AND dislike = ?", post.ID, true).Count(&numDislikes)
+	db.Model(&models.Like{}).Where("\"post_id\" = ? AND \"like\" = ?", post.ID, true).Count(&numLikes)
+	db.Model(&models.Like{}).Where("\"post_id\" = ? AND \"dislike\" = ?", post.ID, true).Count(&numDislikes)
 
 	var responseLike models.LikeResponse
 	if (len(post.Likes) > 0) {
@@ -238,11 +237,11 @@ func UpdatePost(context *gin.Context, db *gorm.DB, requesterRole string, request
 	}
 
 	// execute the update
-	if err := db.Exec("DELETE FROM post_tag WHERE post_id = ?", id).Error; err != nil {
+	if err := db.Exec("DELETE FROM \"post_tag\" WHERE \"post_id\" = ?", id).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting tags: " + err.Error()})
 		return
 	}
-	if err := db.Model(&models.Post{ID: post.ID}).Where("id = ?", id).Update("Tags", tags).Update("Title", postForm.Title).Update("Content", postForm.Content).Error; err != nil {
+	if err := db.Model(&models.Post{ID: post.ID}).Where("\"id\" = ?", id).Update("Tags", tags).Update("Title", postForm.Title).Update("Content", postForm.Content).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while updating: " + err.Error()})
 		return
 	}
@@ -254,7 +253,7 @@ func DeletePost(context *gin.Context, db *gorm.DB, requesterRole string, request
 	id := context.Param("id")
 
 	var post models.Post
-	if err := db.Preload("Owner").First(&post, "id = ?", id).Error; err != nil {
+	if err := db.Preload("Owner").First(&post, "\"id\" = ?", id).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -265,13 +264,13 @@ func DeletePost(context *gin.Context, db *gorm.DB, requesterRole string, request
 	}
 
 	// DELETE ALL REPLIES
-	if err := db.Where("post_id = ?", id).Delete(&models.Reply{}).Error; err != nil {
+	if err := db.Where("\"post_id\" = ?", id).Delete(&models.Reply{}).Error; err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error":"Error while deleting replies: " + err.Error()})
 		return
 	}
 
 	// DELETE ALL TAGS
-	result := db.Where("id = ?", id).Select("Tags", "Likes", "Replies").Delete(&models.Post{ID: post.ID})
+	result := db.Where("\"id\" = ?", id).Select("Tags", "Likes", "Replies").Delete(&models.Post{ID: post.ID})
 	
 	if result.Error != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting: " + result.Error.Error()})

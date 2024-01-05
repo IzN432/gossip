@@ -56,7 +56,7 @@ func CreateLike(context *gin.Context, db *gorm.DB, requesterId uint) {
 		return
 	}
 	
-	if err := db.Model(&like).Where("user_id = ? AND post_id = ?", requesterId, postId).
+	if err := db.Model(&like).Where("\"user_id\" = ? AND \"post_id\" = ?", requesterId, postId).
 					Update("Like", likeForm.Like).
 					Update("Dislike", likeForm.Dislike).Error; 
 					err != nil {

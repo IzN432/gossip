@@ -68,7 +68,7 @@ func DeleteReply(context *gin.Context, db *gorm.DB, requesterRole string, reques
 
 	// authentication
 	var reply models.Reply
-	if err := db.Preload("Owner").First(&reply, "id = ?", id).Error; err != nil {
+	if err := db.Preload("Owner").First(&reply, "\"id\" = ?", id).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -78,7 +78,7 @@ func DeleteReply(context *gin.Context, db *gorm.DB, requesterRole string, reques
 		return
 	}
 
-	result := db.Where("id = ?", id).First(&reply)
+	result := db.Where("\"id\" = ?", id).First(&reply)
 	if err := result.Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while querying reply: " + err.Error()})
 		return
@@ -88,7 +88,7 @@ func DeleteReply(context *gin.Context, db *gorm.DB, requesterRole string, reques
 		return
 	}
 
-	if err := db.Where("id = ?", id).Delete(&reply).Error; err != nil {
+	if err := db.Where("\"id\" = ?", id).Delete(&reply).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while deleting reply: " + err.Error()})
 		return
 	}
@@ -100,7 +100,7 @@ func EditReply(context *gin.Context, db *gorm.DB, requesterRole string, requeste
 	id := context.Param("id")
 	
 	var reply models.Reply
-	if err := db.Preload("Owner").First(&reply, "id = ?", id).Error; err != nil {
+	if err := db.Preload("Owner").First(&reply, "\"id\" = ?", id).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -119,7 +119,7 @@ func EditReply(context *gin.Context, db *gorm.DB, requesterRole string, requeste
 
 	updatedReply.Content = strings.Trim(updatedReply.Content, " ")
 
-	if err := db.Where("id = ?", id).Updates(&updatedReply).Error; err != nil {
+	if err := db.Where("\"id\" = ?", id).Updates(&updatedReply).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while updating reply: " + err.Error()})
 		return
 	}
