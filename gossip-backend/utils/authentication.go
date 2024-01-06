@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -38,7 +39,7 @@ func GenerateToken(id uint, role string) (string, error) {
 }
 
 func AuthenticateUser(authHeader string) (bool, string, uint, error) {
-	secretKey := []byte("YXlQrZHFWD2bBn5sJpSuhSF5sBIWIx4r")
+	secretKey := []byte(os.Getenv("SECRET_KEY"))
 	if authHeader == "" {
 		return false, "", 0, fmt.Errorf("Unauthorized")
 	}
