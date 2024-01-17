@@ -37,6 +37,7 @@ function ViewPost() {
 	const theme = useTheme();
 	const isLarge = useMediaQuery(theme.breakpoints.down("lg"));
 	const isSmall = useMediaQuery(theme.breakpoints.down("md"));
+	const isXSmall = useMediaQuery(theme.breakpoints.down("xs"));
 
 	// retrieve post id
 	const { id } = useParams();
@@ -79,7 +80,7 @@ function ViewPost() {
 		  user.role === "superuser"
 		: false;
 
-	const tagLimit: number = isSmall ? 1 : 4;
+	const tagLimit: number = isXSmall && hasEditPerms ? 4 : isSmall ? 1 : 4;
 
 	//  listener functions
 	const handleHeartClick = () => {
