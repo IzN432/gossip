@@ -119,16 +119,29 @@ function Home() {
 					}}
 				>
 					{/* TITLE */}
-					<Typography
-						variant="h3"
+					<Box
 						sx={{
-							color: `${theme.palette.text.primary}`,
+							display: "flex",
+							flexDirection: "row",
+							gap: "10px",
 							margin: { xs: "0", sm: "20px 0 20px 0" },
 						}}
 					>
-						Gossip
-					</Typography>
+						<Typography
+							variant="h3"
+							sx={{
+								color: `${theme.palette.text.primary}`,
+							}}
+						>
+							Gossip
+						</Typography>
 
+						<img
+							src="oddish.png"
+							style={{ height: "50px" }}
+							draggable={false}
+						/>
+					</Box>
 					{/* SEARCH BAR */}
 					<Searchbar
 						executeSearch={executeSearch}
@@ -143,76 +156,39 @@ function Home() {
 						sx={{
 							display: "flex",
 							justifyContent: "space-between",
-							width: { xs: "calc(100vw - 10px)", sm: "490px" },
+							width: { xs: "100vw", sm: "500px" },
 						}}
 					>
-						{!isSmall ? (
-							<>
-								<Box>
-									<Link
-										component="button"
-										variant="caption"
-										sx={{
-											color: `${
-												sortMode === "latest"
-													? theme.palette.text.primary
-													: theme.palette.text.secondary
-											}`,
-											transition: "color 0.5s ease",
-											marginY: "2px",
-										}}
-										onClick={() => handleSortModeChange("latest")}
-										fontWeight={sortMode === "latest" ? "bold" : "light"}
-									>
-										Latest
-									</Link>
-								</Box>
-								<Box>
-									<Link
-										component="button"
-										variant="caption"
-										sx={{
-											color: `${
-												sortMode === "hot"
-													? theme.palette.error.main
-													: theme.palette.error.dark
-											}`,
-											transition: "color 0.5s ease",
-											marginY: "2px",
-										}}
-										onClick={() => handleSortModeChange("hot")}
-										fontWeight={sortMode === "hot" ? "bold" : "light"}
-									>
-										Hot
-									</Link>
-								</Box>
-							</>
-						) : (
-							<>
-								<Button
-									variant="outlined"
-									sx={{
-										color: `${theme.palette.text.primary}`,
-										transition: "color 0.5s ease",
-										margin: "10px 0 2px 0",
-									}}
-									onClick={() => handleSortModeChange("latest")}
-								>
-									Latest
-								</Button>
-								<Button
-									sx={{
-										color: `${theme.palette.error.main}`,
-										transition: "color 0.5s ease",
-										margin: "10px 0 2px 0",
-									}}
-									onClick={() => handleSortModeChange("hot")}
-									variant="outlined"
-								>
-									Hot
-								</Button>
-							</>
-						)}
+						<Button
+							variant="outlined"
+							sx={{
+								color: `${theme.palette.text.primary}`,
+								transition: "color 0.5s ease",
+								margin: "10px 0 2px 0",
+								backgroundColor:
+									sortMode === "latest"
+										? `${theme.palette.action.focus}`
+										: `${theme.palette.background.default}`,
+							}}
+							onClick={() => handleSortModeChange("latest")}
+						>
+							Latest
+						</Button>
+						<Button
+							sx={{
+								color: `${theme.palette.error.main}`,
+								transition: "color 0.5s ease",
+								margin: "10px 0 2px 0",
+								backgroundColor:
+									sortMode === "hot"
+										? `${theme.palette.action.focus}`
+										: `${theme.palette.background.default}`,
+							}}
+							onClick={() => handleSortModeChange("hot")}
+							variant="outlined"
+						>
+							Hot
+						</Button>
 					</Box>
 
 					{/* CONTENT */}
@@ -225,7 +201,10 @@ function Home() {
 							height: "20px",
 						}}
 					>
-						{filteredPosts.length} gossips (sorted by {sortMode})
+						{filteredPosts.length} gossips (sorted by {sortMode}){" "}
+						{searchTags.length > 0
+							? `(filtered by ${searchTags.length} tags)`
+							: ""}
 					</Typography>
 					<Box
 						sx={{
