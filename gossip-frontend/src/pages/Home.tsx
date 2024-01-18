@@ -1,7 +1,6 @@
 import {
 	Box,
 	Button,
-	Link,
 	Typography,
 	useMediaQuery,
 	useTheme,
@@ -20,7 +19,6 @@ type SortMode = "hot" | "latest";
 
 function Home() {
 	const theme = useTheme();
-	const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
 
 	const { data: posts, isLoading, error } = useGetPostsQuery();
 
@@ -140,6 +138,7 @@ function Home() {
 							src="oddish.png"
 							style={{ height: "50px" }}
 							draggable={false}
+							alt="icon"
 						/>
 					</Box>
 					{/* SEARCH BAR */}

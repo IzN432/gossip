@@ -52,7 +52,7 @@ function TagDialog(props: TagDialogProps) {
 		<Dialog open={open} onClose={handleClose}>
 			<TextField
 				variant="filled"
-				label="Search / New"
+				label={isAdd ? "Create a new tag" : "Search"}
 				sx={{ margin: "0 1px 0 1px" }}
 				onChange={handleSearchChange}
 				value={searchTerm}
