@@ -12,6 +12,7 @@ import {
 import React, { useContext, useState } from "react";
 import { PostMini } from "../../types/posts.interface";
 import HeartButton from "../Buttons/HeartButton";
+import CommentIcon from "@mui/icons-material/Comment";
 import { RelativeToNow } from "../../utils/time";
 import {
 	useDeletePostMutation,
@@ -62,7 +63,7 @@ function DisplayCard(props: DisplayCardProps) {
 		  user.role === "admin"
 		: false;
 
-	const tagLimit = isSmall ? 1 : hasEditPerms ? 3 : 4;
+	const tagLimit: number = hasEditPerms ? 3 : 4;
 
 	// Listeners
 	const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
@@ -77,11 +78,19 @@ function DisplayCard(props: DisplayCardProps) {
 		navigate(`/view/${id}`);
 	};
 
-	const handleHeartClick = () => {
-		if (post.like.like) {
+	const handleReplyClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		// open the page but it auto opens the reply
+		navigate(`/view/${id}?reply=true`);
+	};
+
+	const handleHeartClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (isOwner) return;
+		if (post.like.isLiked) {
 			likeOrDislike({
-				like: false,
-				dislike: false,
+				isLiked: false,
+				isDisliked: false,
 				post_id: post.id,
 			})
 				.unwrap()
@@ -89,8 +98,8 @@ function DisplayCard(props: DisplayCardProps) {
 				.catch((e) => errorHandle(e, "Like"));
 		} else {
 			likeOrDislike({
-				like: true,
-				dislike: false,
+				isLiked: true,
+				isDisliked: false,
 				post_id: post.id,
 			})
 				.unwrap()
@@ -99,11 +108,13 @@ function DisplayCard(props: DisplayCardProps) {
 		}
 	};
 
-	const handleEditClick = () => {
+	const handleEditClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		navigate(`/edit/${id}`);
 	};
 
-	const handleDeleteClick = () => {
+	const handleDeleteClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		setDeleteDialogOpen(true);
 	};
 
@@ -134,7 +145,7 @@ function DisplayCard(props: DisplayCardProps) {
 				sx={{
 					...props.sx,
 					userSelect: "none",
-					padding: "10px 20px 0px 20px",
+					padding: "10px 20px 10px 20px",
 					border: "1px solid",
 					borderRadius: { xs: 0, sm: 0, md: "4px" },
 					borderColor: `${theme.palette.divider}`,
@@ -145,9 +156,6 @@ function DisplayCard(props: DisplayCardProps) {
 						transition: "background-color 0.1s ease",
 						cursor: "pointer",
 					},
-					display: "flex",
-					flexDirection: "column",
-					gap: "10px",
 					height: "225px",
 					width: "100%",
 					position: "relative",
@@ -156,195 +164,256 @@ function DisplayCard(props: DisplayCardProps) {
 				<Box
 					sx={{
 						display: "flex",
+						flexDirection: "column",
 						justifyContent: "space-between",
-						width: "100%",
+						height: "100%",
 					}}
 				>
-					<Typography
-						variant="body2"
-						sx={{ color: `${theme.palette.text.secondary}` }}
-					>
-						{post.owner.username}
-					</Typography>
-					<Typography
-						variant="body2"
-						sx={{ color: `${theme.palette.text.secondary}` }}
-					>
-						{RelativeToNow(post.created_at)}
-					</Typography>
-				</Box>
-				<Typography
-					variant="h6"
-					sx={{ color: `${theme.palette.text.primary}`, width: "100%" }}
-					align="left"
-					noWrap
-				>
-					{post.title}
-				</Typography>
-				<Typography
-					variant="body1"
-					align="justify"
-					sx={{
-						fontWeight: "bold",
-						background: `-webkit-linear-gradient(${theme.palette.text.secondary}, ${theme.palette.action.disabled})`,
-						WebkitBackgroundClip: "text",
-						WebkitTextFillColor: "transparent",
-						overflowY: "hidden",
-						display: "-webkit-box",
-						overflow: "hidden",
-						WebkitBoxOrient: "vertical",
-						WebkitLineClamp: 3,
-						wordBreak: "break-word",
-					}}
-				>
-					{post.content}
-				</Typography>
-			</Paper>
-			<Box
-				sx={{
-					position: "absolute",
-					bottom: "15px",
-					right: "20px",
-					display: "flex",
-					justifyContent: "right",
-					zIndex: "1",
-				}}
-			>
-				<Typography
-					alignSelf="center"
-					variant="h6"
-					sx={{
-						color: `${theme.palette.text.primary}`,
-						marginX: "10px",
-						paddingBottom: "5px",
-					}}
-				>
-					{Intl.NumberFormat("en-US", {
-						notation: "compact",
-						maximumFractionDigits: 1,
-					}).format(post.likes)}
-				</Typography>
-				<HeartButton
-					filled={post.like.like || isOwner}
-					handleClick={handleHeartClick}
-				/>
-				{hasEditPerms && !isSmall && (
-					<Box sx={{ display: "flex", gap: "10px", marginLeft: "20px" }}>
-						<Tooltip title="Delete">
-							<DeleteIcon
-								sx={{
-									":hover": {
-										transform: "scale(1.4)",
-										transition: "transform 0.3s ease",
-										cursor: "pointer",
-									},
-									":active": {
-										color: `${theme.palette.error.dark}`,
-										transition: "color 0.1s ease",
-									},
-									color: `${theme.palette.error.main}`,
-									transition: "transform 0.5s ease, color 0.3s ease",
-
-									height: "32px",
-									width: "32px",
-								}}
-								onClick={handleDeleteClick}
-							/>
-						</Tooltip>
-						<Tooltip title="Edit">
-							<EditIcon
-								sx={{
-									":hover": {
-										transform: "scale(1.4)",
-										transition: "transform 0.3s ease",
-										cursor: "pointer",
-									},
-									":active": {
-										color: `${theme.palette.warning.dark}`,
-										transition: "color 0.1s ease",
-									},
-									color: `${theme.palette.warning.main}`,
-									transition: "transform 0.5s ease, color 0.3s ease",
-
-									height: "32px",
-									width: "32px",
-								}}
-								onClick={handleEditClick}
-							/>
-						</Tooltip>
-					</Box>
-				)}
-			</Box>
-			<Box
-				sx={{
-					position: "absolute",
-					bottom: "15px",
-					left: "20px",
-					display: "flex",
-					gap: "10px",
-					justifyContent: "left",
-					flexWrap: "nowrap",
-					overflowX: "hidden",
-					zIndex: "1",
-				}}
-			>
-				{(tagList.length > tagLimit
-					? tagList.slice(0, tagLimit - 1)
-					: tagList
-				).map((tag) => (
-					<Chip
-						label={tag.description}
-						key={tag.id}
+					<Box
 						sx={{
-							pointerEvents: "none",
+							display: "flex",
+							flexDirection: "column",
 						}}
-					/>
-				))}
-
-				{tagList.length > tagLimit && (
-					<Chip
-						label={tagLimit === 1 ? "tags" : "others"}
-						color="error"
-						sx={{
-							":hover": {
-								cursor: "grab",
-							},
-						}}
-						onMouseEnter={handlePopoverOpen}
-						onMouseLeave={handlePopoverClose}
-					/>
-				)}
-
-				{tagList.length > tagLimit && (
-					<Popover
-						open={open}
-						anchorEl={anchorEl}
-						anchorOrigin={{
-							vertical: "top",
-							horizontal: "right",
-						}}
-						transformOrigin={{
-							vertical: "top",
-							horizontal: "left",
-						}}
-						disableRestoreFocus
-						sx={{ pointerEvents: "none" }}
 					>
 						<Box
 							sx={{
 								display: "flex",
-								flexDirection: "column",
-								padding: "5px",
-								gap: "5px",
+								justifyContent: "space-between",
+								width: "100%",
 							}}
 						>
-							{tagList.slice(tagLimit - 1).map((tag) => (
-								<Chip label={tag.description} key={tag.id} />
-							))}
+							<Typography
+								variant="body2"
+								sx={{ color: `${theme.palette.text.secondary}` }}
+							>
+								{post.owner.username}
+							</Typography>
+							<Typography
+								variant="body2"
+								sx={{ color: `${theme.palette.text.secondary}` }}
+							>
+								{RelativeToNow(post.created_at)}
+							</Typography>
 						</Box>
-					</Popover>
-				)}
-			</Box>
+						<Typography
+							variant="h6"
+							sx={{
+								color: `${theme.palette.text.primary}`,
+								width: "100%",
+								marginTop: "5px",
+							}}
+							align="left"
+							noWrap
+						>
+							{post.title}
+						</Typography>
+						<Typography
+							variant="body1"
+							align="justify"
+							sx={{
+								fontWeight: "bold",
+								background: `-webkit-linear-gradient(${theme.palette.text.secondary}, ${theme.palette.action.disabled})`,
+								WebkitBackgroundClip: "text",
+								WebkitTextFillColor: "transparent",
+								overflowY: "hidden",
+								display: "-webkit-box",
+								overflow: "hidden",
+								WebkitBoxOrient: "vertical",
+								WebkitLineClamp: 3,
+								wordBreak: "break-word",
+								marginTop: "10px",
+							}}
+						>
+							{post.content}
+						</Typography>
+					</Box>
+
+					<Box
+						sx={{
+							marginTop: "20px",
+							width: "100%",
+							display: "flex",
+							flexDirection: "row",
+							justifyContent: "space-between",
+						}}
+					>
+						<Box
+							sx={{
+								display: "flex",
+								gap: "10px",
+								justifyContent: "left",
+								flexWrap: "nowrap",
+								overflowX: "hidden",
+							}}
+						>
+							{(tagList.length > tagLimit
+								? tagList.slice(0, tagLimit - 1)
+								: tagList
+							).map((tag) => (
+								<Chip
+									label={tag.description}
+									key={tag.id}
+									sx={{
+										pointerEvents: "none",
+									}}
+								/>
+							))}
+
+							{tagList.length > tagLimit && (
+								<Chip
+									label={tagLimit === 1 ? "tags" : "others"}
+									color="error"
+									sx={{
+										":hover": {
+											cursor: "grab",
+										},
+									}}
+									onMouseEnter={handlePopoverOpen}
+									onMouseLeave={handlePopoverClose}
+								/>
+							)}
+
+							{tagList.length > tagLimit && (
+								<Popover
+									open={open}
+									anchorEl={anchorEl}
+									anchorOrigin={{
+										vertical: "top",
+										horizontal: "right",
+									}}
+									transformOrigin={{
+										vertical: "top",
+										horizontal: "left",
+									}}
+									disableRestoreFocus
+									sx={{ pointerEvents: "none" }}
+								>
+									<Box
+										sx={{
+											display: "flex",
+											flexDirection: "column",
+											padding: "5px",
+											gap: "5px",
+										}}
+									>
+										{tagList.slice(tagLimit - 1).map((tag) => (
+											<Chip label={tag.description} key={tag.id} />
+										))}
+									</Box>
+								</Popover>
+							)}
+						</Box>
+						<Box sx={{ display: "flex" }}>
+							<HeartButton
+								filled={post.like.isLiked || isOwner}
+								handleClick={handleHeartClick}
+								playAnimation={!isOwner}
+							/>
+							<Typography
+								alignSelf="center"
+								variant="h6"
+								sx={{
+									color: `${theme.palette.text.primary}`,
+									marginX: "10px",
+									paddingBottom: "5px",
+								}}
+							>
+								{Intl.NumberFormat("en-US", {
+									notation: "compact",
+									maximumFractionDigits: 1,
+								}).format(post.likeCount)}
+							</Typography>
+							<Box
+								sx={{
+									display: "flex",
+								}}
+							>
+								<Tooltip title="Reply">
+									<CommentIcon
+										sx={{
+											":hover": {
+												transform: "scale(1.4)",
+												transition: "transform 0.3s ease",
+												cursor: "pointer",
+											},
+											":active": {
+												color: `${theme.palette.text.secondary}`,
+												transition: "color 0.1s ease",
+											},
+											color: `${theme.palette.text.primary}`,
+											transition: "transform 0.5s ease, color 0.3s ease",
+
+											height: "32px",
+											width: "32px",
+										}}
+										onClick={handleReplyClick}
+									/>
+								</Tooltip>
+								<Typography
+									alignSelf="center"
+									variant="h6"
+									sx={{
+										color: `${theme.palette.text.primary}`,
+										marginLeft: "10px",
+										paddingBottom: "5px",
+									}}
+								>
+									{Intl.NumberFormat("en-US", {
+										notation: "compact",
+										maximumFractionDigits: 1,
+									}).format(post.replyCount)}
+								</Typography>
+							</Box>
+							{hasEditPerms && (
+								<Box sx={{ display: "flex", gap: "10px", marginLeft: "10px" }}>
+									<Tooltip title="Delete">
+										<DeleteIcon
+											sx={{
+												":hover": {
+													transform: "scale(1.4)",
+													transition: "transform 0.3s ease",
+													cursor: "pointer",
+												},
+												":active": {
+													color: `${theme.palette.error.dark}`,
+													transition: "color 0.1s ease",
+												},
+												color: `${theme.palette.error.main}`,
+												transition: "transform 0.5s ease, color 0.3s ease",
+
+												height: "32px",
+												width: "32px",
+											}}
+											onClick={handleDeleteClick}
+										/>
+									</Tooltip>
+									<Tooltip title="Edit">
+										<EditIcon
+											sx={{
+												":hover": {
+													transform: "scale(1.4)",
+													transition: "transform 0.3s ease",
+													cursor: "pointer",
+												},
+												":active": {
+													color: `${theme.palette.warning.dark}`,
+													transition: "color 0.1s ease",
+												},
+												color: `${theme.palette.warning.main}`,
+												transition: "transform 0.5s ease, color 0.3s ease",
+
+												height: "32px",
+												width: "32px",
+											}}
+											onClick={handleEditClick}
+										/>
+									</Tooltip>
+								</Box>
+							)}
+						</Box>
+					</Box>
+				</Box>
+			</Paper>
 		</Box>
 	);
 }
