@@ -14,49 +14,62 @@ func GetPosts(context *gin.Context, db *gorm.DB, requesterId uint) {
 
 	// get all posts with user object and tags and the like object that is linked to requesterId
 	var posts []models.Post
-	
+
 	if err := db.Preload("Owner").
-				Preload("Tags").
-				Preload("Likes", "\"user_id\" = ?", requesterId).
-				Find(&posts).Error; err != nil {
+		Preload("Tags").
+		Preload("Likes", "\"user_id\" = ?", requesterId).
+		Find(&posts).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while retrieving posts: " + err.Error()})
 		return
 	}
 
 	responsePosts := []models.PostResponse{}
 	for _, post := range posts {
+
+		// handle likes
 		var numLikes int64
+		var numDislikes int64
 
 		db.Model(&models.Like{}).Where("post_id = ? AND \"like\" = ?", post.ID, true).Count(&numLikes)
+		db.Model(&models.Like{}).Where("\"post_id\" = ? AND \"dislike\" = ?", post.ID, true).Count(&numDislikes)
 
 		var responseLike models.LikeResponse
-		if (len(post.Likes) > 0) {
+		if len(post.Likes) > 0 {
 			responseLike.Like = post.Likes[0].Like
-			responseLike.Dislike= post.Likes[0].Dislike
+			responseLike.Dislike = post.Likes[0].Dislike
 		}
+
+		// handle tags
 
 		responseTags := []models.TagResponse{}
 		for _, tag := range post.Tags {
-			responseTag := models.TagResponse {
-				ID:	tag.ID,
+			responseTag := models.TagResponse{
+				ID:          tag.ID,
 				Description: tag.Description,
 			}
 			responseTags = append(responseTags, responseTag)
 		}
 
+		// handle replies
+		var numReplies int64
+
+		db.Model(&models.Reply{}).Where("post_id = ?", post.ID).Count(&numReplies)
+
 		responsePost := models.PostResponse{
-			ID: post.ID,
+			ID:        post.ID,
 			CreatedAt: post.CreatedAt,
-			Title: post.Title,
-			Content: post.Content,
+			Title:     post.Title,
+			Content:   post.Content,
 			Owner: models.UserResponse{
-				ID: post.Owner.ID,
+				ID:       post.Owner.ID,
 				Username: post.Owner.Username,
-				Role: post.Owner.Role,
+				Role:     post.Owner.Role,
 			},
-			Tags: responseTags,
-			Likes: numLikes,
-			Like: responseLike,
+			Tags:         responseTags,
+			LikeCount:    numLikes,
+			DislikeCount: numDislikes,
+			Like:         responseLike,
+			ReplyCount:   numReplies,
 		}
 
 		responsePosts = append(responsePosts, responsePost)
@@ -75,6 +88,7 @@ func GetPost(context *gin.Context, db *gorm.DB, requesterId uint) {
 		return
 	}
 
+	// handle likes
 	var numLikes int64
 	var numDislikes int64
 
@@ -82,34 +96,41 @@ func GetPost(context *gin.Context, db *gorm.DB, requesterId uint) {
 	db.Model(&models.Like{}).Where("\"post_id\" = ? AND \"dislike\" = ?", post.ID, true).Count(&numDislikes)
 
 	var responseLike models.LikeResponse
-	if (len(post.Likes) > 0) {
+	if len(post.Likes) > 0 {
 		responseLike.Like = post.Likes[0].Like
-		responseLike.Dislike= post.Likes[0].Dislike
+		responseLike.Dislike = post.Likes[0].Dislike
 	}
 
+	// handle tags
 	responseTags := []models.TagResponse{}
 	for _, tag := range post.Tags {
-		responseTag := models.TagResponse {
-			ID:	tag.ID,
+		responseTag := models.TagResponse{
+			ID:          tag.ID,
 			Description: tag.Description,
 		}
 		responseTags = append(responseTags, responseTag)
 	}
 
+	// handle replies
+	var numReplies int64
+
+	db.Model(&models.Reply{}).Where("post_id = ?", post.ID).Count(&numReplies)
+
 	responsePost := models.PostResponse{
-		ID: post.ID,
+		ID:        post.ID,
 		CreatedAt: post.CreatedAt,
-		Title: post.Title,
-		Content: post.Content,
+		Title:     post.Title,
+		Content:   post.Content,
 		Owner: models.UserResponse{
-			ID: post.Owner.ID,
+			ID:       post.Owner.ID,
 			Username: post.Owner.Username,
-			Role: post.Owner.Role,
+			Role:     post.Owner.Role,
 		},
-		Tags: responseTags,
-		Likes: numLikes,
-		Dislikes: numDislikes,
-		Like: responseLike,
+		Tags:         responseTags,
+		LikeCount:    numLikes,
+		DislikeCount: numDislikes,
+		Like:         responseLike,
+		ReplyCount:   numReplies,
 	}
 
 	context.JSON(http.StatusOK, responsePost)
@@ -118,10 +139,10 @@ func GetPost(context *gin.Context, db *gorm.DB, requesterId uint) {
 func CreatePost(context *gin.Context, db *gorm.DB, requesterId uint) {
 	// Bind JSON request to new post
 	type requestParams struct {
-		Title		string			`json:"title"`
-		Content		string			`json:"content"`
-		Tags		[]*models.Tag	`json:"tags"`
-		OwnerID		uint
+		Title   string        `json:"title"`
+		Content string        `json:"content"`
+		Tags    []*models.Tag `json:"tags"`
+		OwnerID uint
 	}
 
 	var owner models.User
@@ -135,10 +156,10 @@ func CreatePost(context *gin.Context, db *gorm.DB, requesterId uint) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Incorrect input format"})
 		return
 	}
-	
+
 	postForm.Title = strings.Trim(postForm.Title, " ")
 	postForm.Content = strings.Trim(postForm.Content, " ")
-	
+
 	exists, err := utils.TagsExist(postForm.Tags, db)
 
 	if err != nil {
@@ -155,7 +176,7 @@ func CreatePost(context *gin.Context, db *gorm.DB, requesterId uint) {
 	post.Title = postForm.Title
 	post.Content = postForm.Content
 	post.OwnerID = requesterId
-	
+
 	// Assuming Tag is your model representing a tag
 	tags := []*models.Tag{}
 	for _, tag := range postForm.Tags {
@@ -176,7 +197,7 @@ func CreatePost(context *gin.Context, db *gorm.DB, requesterId uint) {
 		return
 	}
 
-	context.JSON(http.StatusCreated, gin.H{"message":"Successfully created new post!"})
+	context.JSON(http.StatusCreated, gin.H{"message": "Successfully created new post!"})
 }
 
 func UpdatePost(context *gin.Context, db *gorm.DB, requesterRole string, requesterId uint) {
@@ -190,16 +211,16 @@ func UpdatePost(context *gin.Context, db *gorm.DB, requesterRole string, request
 
 	}
 
-	if (utils.RoleToPower(requesterRole) <= 0 && post.Owner.ID != requesterId) {
-		context.JSON(http.StatusUnauthorized, gin.H{"error":"You are not authorized to edit that post"})
+	if utils.RoleToPower(requesterRole) <= 0 && post.Owner.ID != requesterId {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized to edit that post"})
 		return
 	}
 
 	type requestParams struct {
-		ID			uint
-		Title		string
-		Content		string
-		Tags		[]*models.Tag
+		ID      uint
+		Title   string
+		Content string
+		Tags    []*models.Tag
 	}
 
 	// Bind the JSON to updatedPost
@@ -258,20 +279,20 @@ func DeletePost(context *gin.Context, db *gorm.DB, requesterRole string, request
 		return
 	}
 
-	if (utils.RoleToPower(requesterRole) <= 0 && post.Owner.ID != requesterId) {
-		context.JSON(http.StatusUnauthorized, gin.H{"error":"You are not authorized to delete that post"})
+	if utils.RoleToPower(requesterRole) <= 0 && post.Owner.ID != requesterId {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "You are not authorized to delete that post"})
 		return
 	}
 
 	// DELETE ALL REPLIES
 	if err := db.Where("\"post_id\" = ?", id).Delete(&models.Reply{}).Error; err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error":"Error while deleting replies: " + err.Error()})
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Error while deleting replies: " + err.Error()})
 		return
 	}
 
 	// DELETE ALL TAGS
 	result := db.Where("\"id\" = ?", id).Select("Tags", "Likes", "Replies").Delete(&models.Post{ID: post.ID})
-	
+
 	if result.Error != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting: " + result.Error.Error()})
 		return

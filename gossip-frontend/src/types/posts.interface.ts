@@ -33,8 +33,9 @@ export interface PostMini {
 	owner: User;
 	created_at: string;
 	like: Like;
-	likes: number;
-	dislikes: number;
+	likeCount: number;
+	dislikeCount: number;
+	replyCount: number;
 }
 
 export interface PostForm {
@@ -58,8 +59,9 @@ export interface Post {
 	owner: User;
 	like: Like;
 	created_at: string;
-	likes: number;
-	dislikes: number;
+	likeCount: number;
+	dislikeCount: number;
+	replyCount: number;
 }
 
 export interface Tag {
@@ -92,12 +94,12 @@ export interface ReplyUpdateForm {
 
 export interface Like {
 	interacted: boolean;
-	like: boolean;
-	dislike: boolean;
+	isLiked: boolean;
+	isDisliked: boolean;
 }
 
 export interface LikeForm {
-	like: boolean;
-	dislike: boolean;
+	isLiked: boolean;
+	isDisliked: boolean;
 	post_id: number;
 }

@@ -154,6 +154,49 @@ export const api = createApi({
 				body: like,
 			}),
 			invalidatesTags: ["Post"],
+			async onQueryStarted(
+				{ isLiked, isDisliked, post_id },
+				{ dispatch, queryFulfilled }
+			) {
+				const patchPostsResult = dispatch(
+					api.util.updateQueryData("getPosts", undefined, (draftPosts) => {
+						const postToUpdate = draftPosts.find((post) => post.id === post_id);
+
+						if (postToUpdate) {
+							if (postToUpdate.like.isLiked !== isLiked) {
+								postToUpdate.likeCount += isLiked ? 1 : -1;
+							} else if (!postToUpdate.like.isDisliked !== isDisliked) {
+								postToUpdate.dislikeCount += isDisliked ? 1 : -1;
+							}
+
+							// Update the isLiked and isDisliked fields
+							postToUpdate.like.isLiked = isLiked;
+							postToUpdate.like.isDisliked = isDisliked;
+						}
+					})
+				);
+				const patchPostResult = dispatch(
+					api.util.updateQueryData("getPostById", post_id, (draftPost) => {
+						if (draftPost) {
+							if (draftPost.like.isLiked !== isLiked) {
+								draftPost.likeCount += isLiked ? 1 : -1;
+							} else if (!draftPost.like.isDisliked !== isDisliked) {
+								draftPost.dislikeCount += isDisliked ? 1 : -1;
+							}
+
+							// Update the isLiked and isDisliked fields
+							draftPost.like.isLiked = isLiked;
+							draftPost.like.isDisliked = isDisliked;
+						}
+					})
+				);
+				try {
+					await queryFulfilled;
+				} catch {
+					patchPostsResult.undo();
+					patchPostResult.undo();
+				}
+			},
 		}),
 	}),
 });

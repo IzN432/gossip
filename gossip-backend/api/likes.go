@@ -21,8 +21,8 @@ func CreateLike(context *gin.Context, db *gorm.DB, requesterId uint) {
 
 	// retrieve the json and put it into a struct
 	type requestParams struct {
-		Like		bool	`json:"like"`
-		Dislike		bool	`json:"dislike"`
+		Like    bool `json:"isLiked"`
+		Dislike bool `json:"isDisliked"`
 	}
 
 	var likeForm requestParams
@@ -30,7 +30,7 @@ func CreateLike(context *gin.Context, db *gorm.DB, requesterId uint) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while parsing JSON: " + err.Error()})
 		return
 	}
-	
+
 	// Check for self likers
 	var post models.Post
 	if err := db.First(&post, postId).Error; err != nil {
@@ -55,11 +55,10 @@ func CreateLike(context *gin.Context, db *gorm.DB, requesterId uint) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request structure"})
 		return
 	}
-	
+
 	if err := db.Model(&like).Where("\"user_id\" = ? AND \"post_id\" = ?", requesterId, postId).
-					Update("Like", likeForm.Like).
-					Update("Dislike", likeForm.Dislike).Error; 
-					err != nil {
+		Update("Like", likeForm.Like).
+		Update("Dislike", likeForm.Dislike).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while updating like: " + err.Error()})
 		return
 	}

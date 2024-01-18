@@ -16,13 +16,14 @@ type Post struct {
 }
 
 type PostResponse struct {
-	ID        uint      	`json:"id"`
-	CreatedAt time.Time 	`json:"created_at"`
-	Title     string    	`json:"title"`
-	Content   string    	`json:"content"`
-	Owner     UserResponse  `json:"owner"`
-	Tags      []TagResponse `json:"tags"`
-	Likes     int64			`json:"likes"`
-	Dislikes  int64			`json:"dislikes"`
-	Like	  LikeResponse	`json:"like"`
+	ID           uint          `json:"id"`
+	CreatedAt    time.Time     `json:"created_at"`
+	Title        string        `json:"title"`
+	Content      string        `json:"content"`
+	Owner        UserResponse  `json:"owner"`
+	Tags         []TagResponse `json:"tags"`
+	LikeCount    int64         `json:"likeCount"`
+	DislikeCount int64         `json:"dislikeCount"`
+	Like         LikeResponse  `json:"like"`
+	ReplyCount   int64         `json:"replyCount"`
 }

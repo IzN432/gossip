@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import DislikeButton from "../components/Buttons/DislikeButton";
 import HeartButton from "../components/Buttons/HeartButton";
 import ReplyCard from "../components/Cards/ReplyCard";
@@ -42,6 +42,10 @@ function ViewPost() {
 	// retrieve post id
 	const { id } = useParams();
 
+	const [searchParams] = useSearchParams();
+
+	const reply = searchParams.get("reply");
+
 	const navigate = useContext(AnimationContext)!;
 
 	// retrieve user
@@ -64,7 +68,7 @@ function ViewPost() {
 
 	const [createReply] = useCreateReplyMutation();
 
-	const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+	const [replyDialogOpen, setReplyDialogOpen] = useState(Boolean(reply));
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	const [deletePost] = useDeletePostMutation();
@@ -74,23 +78,28 @@ function ViewPost() {
 	const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 	const open = Boolean(anchorEl);
 
+	const isOwner = user ? post?.owner.id === user.id : false;
+
 	const hasEditPerms = user
 		? post?.owner.id === user.id ||
 		  user.role === "admin" ||
 		  user.role === "superuser"
 		: false;
 
-	const tagLimit: number = isXSmall && hasEditPerms ? 4 : isSmall ? 1 : 4;
+	const tagLimit: number = isSmall && hasEditPerms ? 4 : isSmall ? 1 : 4;
 
 	//  listener functions
 	const handleHeartClick = () => {
-		if (post!.like.like) {
-			likeOrDislike({ like: false, dislike: false, post_id: post!.id })
+		if (isOwner) {
+			return;
+		}
+		if (post!.like.isLiked) {
+			likeOrDislike({ isLiked: false, isDisliked: false, post_id: post!.id })
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
 		} else {
-			likeOrDislike({ like: true, dislike: false, post_id: post!.id })
+			likeOrDislike({ isLiked: true, isDisliked: false, post_id: post!.id })
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
@@ -98,13 +107,16 @@ function ViewPost() {
 	};
 
 	const handleDislikeClick = () => {
-		if (post!.like.dislike) {
-			likeOrDislike({ like: false, dislike: false, post_id: post!.id })
+		if (isOwner) {
+			return;
+		}
+		if (post!.like.isDisliked) {
+			likeOrDislike({ isLiked: false, isDisliked: false, post_id: post!.id })
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
 		} else {
-			likeOrDislike({ like: false, dislike: true, post_id: post!.id })
+			likeOrDislike({ isLiked: false, isDisliked: true, post_id: post!.id })
 				.unwrap()
 				.then((payload) => toast(payload.message))
 				.catch((e) => errorHandle(e, "Like"));
@@ -255,7 +267,7 @@ function ViewPost() {
 							</Box>
 
 							<Typography
-								variant="h4"
+								variant="h5"
 								sx={{
 									color: `${theme.palette.text.primary}`,
 									marginY: "10px",
@@ -378,8 +390,9 @@ function ViewPost() {
 										}}
 									>
 										<HeartButton
-											filled={post!.like.like || hasEditPerms}
+											filled={post!.like.isLiked || isOwner}
 											handleClick={handleHeartClick}
+											playAnimation={!isOwner}
 										/>
 										<Typography
 											alignSelf="center"
@@ -393,13 +406,14 @@ function ViewPost() {
 											{Intl.NumberFormat("en-US", {
 												notation: "compact",
 												maximumFractionDigits: 1,
-											}).format(post!.likes)}
+											}).format(post!.likeCount)}
 										</Typography>
 									</Box>
 									<Box sx={{ display: "flex" }}>
 										<DislikeButton
-											filled={post!.like.dislike || hasEditPerms}
+											filled={post!.like.isDisliked || isOwner}
 											handleClick={handleDislikeClick}
+											playAnimation={!isOwner}
 										/>
 										<Typography
 											alignSelf="center"
@@ -413,7 +427,7 @@ function ViewPost() {
 											{Intl.NumberFormat("en-US", {
 												notation: "compact",
 												maximumFractionDigits: 1,
-											}).format(post!.dislikes)}
+											}).format(post!.dislikeCount)}
 										</Typography>
 									</Box>
 									<Box
@@ -454,7 +468,7 @@ function ViewPost() {
 											{Intl.NumberFormat("en-US", {
 												notation: "compact",
 												maximumFractionDigits: 1,
-											}).format((replies || []).length)}
+											}).format(post!.replyCount)}
 										</Typography>
 									</Box>
 									{hasEditPerms && (
