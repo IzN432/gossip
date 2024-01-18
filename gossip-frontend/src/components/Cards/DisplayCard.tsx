@@ -54,6 +54,8 @@ function DisplayCard(props: DisplayCardProps) {
 
 	const { data: user } = useGetUserQuery();
 
+	const isOwner = user ? user.id === post.owner.id : false;
+
 	const hasEditPerms = user
 		? user.id === post.owner.id ||
 		  user.role === "superuser" ||
@@ -223,7 +225,7 @@ function DisplayCard(props: DisplayCardProps) {
 					}).format(post.likes)}
 				</Typography>
 				<HeartButton
-					filled={post.like.like || hasEditPerms}
+					filled={post.like.like || isOwner}
 					handleClick={handleHeartClick}
 				/>
 				{hasEditPerms && !isSmall && (
