@@ -4,8 +4,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import {
 	Box,
 	Chip,
+	Fade,
 	Paper,
 	Popover,
+	Popper,
 	Tooltip,
 	Typography,
 	useMediaQuery,
@@ -179,7 +181,7 @@ function ViewPost() {
 		}
 	}, [repliesError]);
 
-	return isLoading ? (
+	return !user || isLoading ? (
 		<Loading />
 	) : (
 		<>
@@ -348,33 +350,33 @@ function ViewPost() {
 									)}
 
 									{post!.tags.length > tagLimit && (
-										<Popover
+										<Popper
 											open={open}
 											anchorEl={anchorEl}
-											anchorOrigin={{
-												vertical: "top",
-												horizontal: "right",
-											}}
-											transformOrigin={{
-												vertical: "top",
-												horizontal: "left",
-											}}
-											disableRestoreFocus
-											sx={{ pointerEvents: "none" }}
+											sx={{ zIndex: 1, pointerEvents: "none" }}
+											placement="right-start"
+											transition
+											disablePortal
 										>
-											<Box
-												sx={{
-													display: "flex",
-													flexDirection: "column",
-													padding: "5px",
-													gap: "5px",
-												}}
-											>
-												{post!.tags.slice(tagLimit - 1).map((tag) => (
-													<Chip label={tag.description} key={tag.id} />
-												))}
-											</Box>
-										</Popover>
+											{({ TransitionProps }) => (
+												<Fade {...TransitionProps} timeout={350}>
+													<Paper
+														elevation={8}
+														sx={{
+															backgroundColor: `${theme.palette.background.paper}`,
+															display: "flex",
+															flexDirection: "column",
+															padding: "5px",
+															gap: "5px",
+														}}
+													>
+														{post!.tags.slice(tagLimit - 1).map((tag) => (
+															<Chip label={tag.description} key={tag.id} />
+														))}
+													</Paper>
+												</Fade>
+											)}
+										</Popper>
 									)}
 								</Box>
 								<Box

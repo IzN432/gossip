@@ -1,15 +1,17 @@
 import {
 	Box,
 	Chip,
+	Fade,
 	Paper,
 	Popover,
+	Popper,
 	SxProps,
 	Tooltip,
 	Typography,
 	useMediaQuery,
 	useTheme,
 } from "@mui/material";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { PostMini } from "../../types/posts.interface";
 import HeartButton from "../Buttons/HeartButton";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -244,7 +246,8 @@ function DisplayCard(props: DisplayCardProps) {
 								gap: "10px",
 								justifyContent: "left",
 								flexWrap: "nowrap",
-								overflowX: "hidden",
+								position: "relative",
+								overflow: "visible",
 							}}
 						>
 							{(tagList.length > tagLimit
@@ -271,37 +274,39 @@ function DisplayCard(props: DisplayCardProps) {
 									}}
 									onMouseEnter={handlePopoverOpen}
 									onMouseLeave={handlePopoverClose}
+									onClick={(e: React.MouseEvent) => {
+										e.stopPropagation();
+									}}
 								/>
 							)}
-
 							{tagList.length > tagLimit && (
-								<Popover
+								<Popper
 									open={open}
 									anchorEl={anchorEl}
-									anchorOrigin={{
-										vertical: "top",
-										horizontal: "right",
-									}}
-									transformOrigin={{
-										vertical: "top",
-										horizontal: "left",
-									}}
-									disableRestoreFocus
-									sx={{ pointerEvents: "none" }}
+									sx={{ zIndex: 1, pointerEvents: "none" }}
+									placement="right-start"
+									transition
+									disablePortal
 								>
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-											padding: "5px",
-											gap: "5px",
-										}}
-									>
-										{tagList.slice(tagLimit - 1).map((tag) => (
-											<Chip label={tag.description} key={tag.id} />
-										))}
-									</Box>
-								</Popover>
+									{({ TransitionProps }) => (
+										<Fade {...TransitionProps} timeout={350}>
+											<Paper
+												elevation={8}
+												sx={{
+													backgroundColor: `${theme.palette.background.paper}`,
+													display: "flex",
+													flexDirection: "column",
+													padding: "5px",
+													gap: "5px",
+												}}
+											>
+												{tagList.slice(tagLimit - 1).map((tag) => (
+													<Chip label={tag.description} key={tag.id} />
+												))}
+											</Paper>
+										</Fade>
+									)}
+								</Popper>
 							)}
 						</Box>
 						<Box sx={{ display: "flex" }}>
