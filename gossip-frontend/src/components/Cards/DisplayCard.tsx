@@ -67,6 +67,7 @@ function DisplayCard(props: DisplayCardProps) {
 
 	// Listeners
 	const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
+		e.stopPropagation();
 		setAnchorEl(e.currentTarget);
 	};
 
