@@ -196,7 +196,7 @@ function Home() {
 						sx={{
 							color: `${theme.palette.text.secondary}`,
 							margin: "5px 5px 0px 5px",
-							width: { xs: "calc(100vw - 10px)", sm: "490px" },
+							width: { xs: "100vw", sm: "500px" },
 							height: "20px",
 						}}
 					>
