@@ -64,9 +64,6 @@ function EditPost() {
 
 	const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const newValue = e.target.value;
-		if (newValue.length === 0) {
-			setContentError("Cannot be empty");
-		}
 		setContent(e.target.value);
 	};
 	const [editPost] = useEditPostMutation();

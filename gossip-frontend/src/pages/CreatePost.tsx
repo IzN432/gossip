@@ -44,9 +44,6 @@ function CreatePost() {
 
 	const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const newValue = e.target.value;
-		if (newValue.length === 0) {
-			setContentError("Content cannot be empty");
-		}
 		setContent(newValue);
 	};
 
