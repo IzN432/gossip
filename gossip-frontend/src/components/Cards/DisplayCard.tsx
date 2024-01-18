@@ -108,11 +108,13 @@ function DisplayCard(props: DisplayCardProps) {
 		}
 	};
 
-	const handleEditClick = () => {
+	const handleEditClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		navigate(`/edit/${id}`);
 	};
 
-	const handleDeleteClick = () => {
+	const handleDeleteClick = (e: React.MouseEvent) => {
+		e.stopPropagation();
 		setDeleteDialogOpen(true);
 	};
 
