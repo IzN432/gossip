@@ -63,10 +63,11 @@ function DisplayCard(props: DisplayCardProps) {
 		  user.role === "admin"
 		: false;
 
-	const tagLimit: number = hasEditPerms ? 3 : 4;
+	const tagLimit: number = (hasEditPerms ? 3 : 4) - (isSmall ? 1 : 0);
 
 	// Listeners
 	const handlePopoverOpen = (e: React.MouseEvent<HTMLElement>) => {
+		e.stopPropagation();
 		setAnchorEl(e.currentTarget);
 	};
 
