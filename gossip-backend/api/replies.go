@@ -23,15 +23,15 @@ func GetReplies(context *gin.Context, db *gorm.DB) {
 	replyResponses := []models.ReplyResponse{}
 
 	for _, reply := range replies {
-		replyResponse := models.ReplyResponse {
-			ID: reply.ID,
+		replyResponse := models.ReplyResponse{
+			ID:        reply.ID,
 			CreatedAt: reply.CreatedAt,
-			Content: reply.Content,
-			PostID: reply.PostID,
-			Owner: models.UserResponse {
-				ID: reply.Owner.ID,
+			Content:   reply.Content,
+			PostID:    reply.PostID,
+			Owner: models.UserResponse{
+				ID:       reply.Owner.ID,
 				Username: reply.Owner.Username,
-				Role: reply.Owner.Role,
+				Role:     reply.Owner.Role,
 			},
 		}
 		replyResponses = append(replyResponses, replyResponse)
@@ -58,8 +58,8 @@ func CreateReply(context *gin.Context, db *gorm.DB, requesterId uint) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while creating reply: " + err.Error()})
 		return
 	}
-	
-	context.JSON(http.StatusCreated, gin.H{"message":"Successfully created reply", "data": newReply})
+
+	context.JSON(http.StatusCreated, gin.H{"message": "Successfully created reply", "data": newReply})
 }
 
 func DeleteReply(context *gin.Context, db *gorm.DB, requesterRole string, requesterId uint) {
@@ -80,7 +80,7 @@ func DeleteReply(context *gin.Context, db *gorm.DB, requesterRole string, reques
 
 	result := db.Where("\"id\" = ?", id).First(&reply)
 	if err := result.Error; err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while querying reply: " + err.Error()})
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while querying reply: " + err.Error()})
 		return
 	}
 	if result.RowsAffected == 0 {
@@ -89,7 +89,7 @@ func DeleteReply(context *gin.Context, db *gorm.DB, requesterRole string, reques
 	}
 
 	if err := db.Where("\"id\" = ?", id).Delete(&reply).Error; err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while deleting reply: " + err.Error()})
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while deleting reply: " + err.Error()})
 		return
 	}
 
@@ -98,7 +98,7 @@ func DeleteReply(context *gin.Context, db *gorm.DB, requesterRole string, reques
 
 func EditReply(context *gin.Context, db *gorm.DB, requesterRole string, requesterId uint) {
 	id := context.Param("id")
-	
+
 	var reply models.Reply
 	if err := db.Preload("Owner").First(&reply, "\"id\" = ?", id).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

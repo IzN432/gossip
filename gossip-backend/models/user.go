@@ -16,7 +16,7 @@ type User struct {
 
 // Omit created at updated at posts replies and likes and password
 type UserResponse struct {
-	ID         uint  `json:"id"`
-	Username   string `json:"username"`
-	Role       string `json:"role"`
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
 }

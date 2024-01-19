@@ -25,10 +25,10 @@ func SigninUser(context *gin.Context, db *gorm.DB) {
 
 	err := db.Where("UPPER(username) LIKE UPPER(?)", signinUser.Username).First(&databaseUser).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		context.JSON(http.StatusUnauthorized, gin.H{"error":"Username not found"})
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Username not found"})
 		return
-	} else if (err != nil) {
-		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while querying database: " + err.Error()})
+	} else if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while querying database: " + err.Error()})
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(databaseUser.Password), []byte(signinUser.Password))
@@ -44,9 +44,9 @@ func SigninUser(context *gin.Context, db *gorm.DB) {
 	}
 
 	type responseParams struct {
-		ID			uint		`json:"id"`
-		Username	string		`json:"username"`
-		Role		string		`json:"role"`
+		ID       uint   `json:"id"`
+		Username string `json:"username"`
+		Role     string `json:"role"`
 	}
 
 	var returnUser responseParams
@@ -54,12 +54,12 @@ func SigninUser(context *gin.Context, db *gorm.DB) {
 	returnUser.Username = signinUser.Username
 	returnUser.Role = databaseUser.Role
 
-	payload := gin.H{ "user": returnUser, "token": token }
+	payload := gin.H{"user": returnUser, "token": token}
 	context.JSON(http.StatusOK, gin.H{"message": "Successfully signed in", "data": payload})
 }
 
 func CreateUser(context *gin.Context, db *gorm.DB, requesterRole string) {
-	
+
 	// Bind JSON request to new tag
 	var newUser models.User
 
@@ -102,7 +102,7 @@ func CreateUser(context *gin.Context, db *gorm.DB, requesterRole string) {
 	// Check that username is unique
 	var count int64
 	if err := db.Model(&models.User{}).Where("UPPER(username) LIKE UPPER(?)", newUser.Username).Count(&count).Error; err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error":"Error while checking for username availability: " + err.Error()})
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while checking for username availability: " + err.Error()})
 		return
 	}
 	if count != 0 {
@@ -140,7 +140,7 @@ func GetUser(context *gin.Context, db *gorm.DB, requesterId uint) {
 		return
 	}
 
-	responseUser := models.UserResponse{ ID: user.ID, Username: user.Username, Role: user.Role }
+	responseUser := models.UserResponse{ID: user.ID, Username: user.Username, Role: user.Role}
 
 	context.JSON(http.StatusOK, responseUser)
 }

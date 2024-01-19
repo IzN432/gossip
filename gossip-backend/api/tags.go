@@ -19,8 +19,8 @@ func GetTags(context *gin.Context, db *gorm.DB) {
 
 	responseTags := []models.TagResponse{}
 	for _, tag := range tags {
-		responseTag := models.TagResponse {
-			ID: tag.ID,
+		responseTag := models.TagResponse{
+			ID:          tag.ID,
 			Description: tag.Description,
 		}
 		responseTags = append(responseTags, responseTag)
@@ -39,14 +39,14 @@ func CreateTag(context *gin.Context, db *gorm.DB) {
 		return
 	}
 	newTag.Description = strings.Trim(newTag.Description, " ")
-	
+
 	if err := db.Create(&newTag).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while creating tags: " + err.Error()})
 		return
 	}
 
-	responseTag := models.TagResponse {
-		ID: newTag.ID,
+	responseTag := models.TagResponse{
+		ID:          newTag.ID,
 		Description: newTag.Description,
 	}
 
@@ -55,8 +55,8 @@ func CreateTag(context *gin.Context, db *gorm.DB) {
 
 func DeleteTag(context *gin.Context, db *gorm.DB, requesterRole string) {
 
-	if (utils.RoleToPower(requesterRole) <= 0) {
-		context.JSON(http.StatusUnauthorized, gin.H{"error":"You are unauthorized to create new tags"})
+	if utils.RoleToPower(requesterRole) <= 0 {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "You are unauthorized to create new tags"})
 		return
 	}
 
