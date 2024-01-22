@@ -67,6 +67,7 @@ export interface Post {
 export interface Tag {
 	id: number;
 	description: string;
+	postCount: number;
 }
 
 export interface TagForm {

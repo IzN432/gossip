@@ -124,8 +124,10 @@ function TagDialog(props: TagDialogProps) {
 										}
 									>
 										<ListItemText
+											sx={{ justifyContent: "space-between", display: "flex" }}
 											id={tag.description}
 											primary={tag.description}
+											secondary={`${tag.postCount}`}
 										/>
 									</ListItemButton>
 								</ListItem>

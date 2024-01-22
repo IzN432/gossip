@@ -1,6 +1,6 @@
 # STAGE 1 FRONTEND
 
-FROM node:20 AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/gossip-frontend
 
@@ -14,7 +14,7 @@ RUN npm run build
 
 # STAGE 2 BACKEND
 
-FROM golang:1.21 AS backend-builder
+FROM golang:1.21-alpine AS backend-builder
 
 WORKDIR /app/gossip
 
@@ -26,7 +26,7 @@ RUN go build -o main
 
 # STAGE 3: FINAL IMAGE
 
-FROM golang:1.21
+FROM golang:1.21-alpine
 
 WORKDIR /app
 

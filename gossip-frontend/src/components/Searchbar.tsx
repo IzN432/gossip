@@ -28,11 +28,35 @@ function Searchbar(props: {
 
 	const { data: availableTags, isLoading, error } = useGetTagsQuery();
 
+	const [sortedTags, setSortedTags] = useState<Tag[]>([]);
+
 	useEffect(() => {
 		if (error) errorHandle(error, "Tags");
 	}, [error]);
 
+	useEffect(() => {
+		if (availableTags)
+			setSortedTags(
+				availableTags.slice().sort((a: Tag, b: Tag) => {
+					return (
+						(tagList.find((t) => t.id === b.id) ? 1 : 0) -
+							(tagList.find((t) => t.id === a.id) ? 1 : 0) ||
+						b.postCount - a.postCount
+					);
+				})
+			);
+	}, [availableTags]);
+
 	const handleDialogOpen = () => {
+		setSortedTags(
+			sortedTags.slice().sort((a: Tag, b: Tag) => {
+				return (
+					(tagList.find((t) => t.id === b.id) ? 1 : 0) -
+						(tagList.find((t) => t.id === a.id) ? 1 : 0) ||
+					b.postCount - a.postCount
+				);
+			})
+		);
 		setDialogOpen(true);
 	};
 	const handleDialogClose = () => {
@@ -50,7 +74,7 @@ function Searchbar(props: {
 	return (
 		<>
 			<TagDialog
-				availableTags={availableTags}
+				availableTags={sortedTags}
 				selectedTags={tagList}
 				handleClose={handleDialogClose}
 				handleSelectTag={handleSelectTag}

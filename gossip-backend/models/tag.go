@@ -13,4 +13,5 @@ type Tag struct {
 type TagResponse struct {
 	ID          uint   `json:"id"`
 	Description string `json:"description"`
+	PostCount   int    `json:"postCount"`
 }

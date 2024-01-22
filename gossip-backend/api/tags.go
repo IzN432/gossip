@@ -11,8 +11,9 @@ import (
 )
 
 func GetTags(context *gin.Context, db *gorm.DB) {
+
 	var tags []models.Tag
-	if err := db.Find(&tags).Error; err != nil {
+	if err := db.Preload("Posts").Find(&tags).Error; err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Error while retrieving tags: " + err.Error()})
 		return
 	}
@@ -22,6 +23,7 @@ func GetTags(context *gin.Context, db *gorm.DB) {
 		responseTag := models.TagResponse{
 			ID:          tag.ID,
 			Description: tag.Description,
+			PostCount:   len(tag.Posts),
 		}
 		responseTags = append(responseTags, responseTag)
 	}
