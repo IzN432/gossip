@@ -1,4 +1,4 @@
-module example/gossip
+module example/gossip/gossip-backend
 
 go 1.21.5
 
