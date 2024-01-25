@@ -20,7 +20,7 @@ func HashPassword(password string) (string, error) {
 }
 
 func GenerateToken(id uint, role string) (string, error) {
-	secretKey := []byte("YXlQrZHFWD2bBn5sJpSuhSF5sBIWIx4r")
+	secretKey := []byte(os.Getenv("SECRET_KEY"))
 
 	token := jwt.New(jwt.SigningMethodHS256)
 
