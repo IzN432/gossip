@@ -45,7 +45,7 @@ cd gossip
 
 2. Download dependencies:
     ```bash
-    go download
+    go install
     ```
 
 3. Run the application in development mode:
