@@ -23,7 +23,6 @@ function Searchbar(props: {
 }) {
 	const { initialValue, executeSearch, handleSelectTag, tagList } = props;
 
-	const [searchString, setSearchString] = useState("");
 	const [dialogOpen, setDialogOpen] = useState(false);
 
 	const { data: availableTags, isLoading, error } = useGetTagsQuery();
@@ -66,7 +65,7 @@ function Searchbar(props: {
 	const handleSearchChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
 	) => {
-		setSearchString(e.currentTarget.value);
+		executeSearch(e.currentTarget.value);
 	};
 
 	const theme = useTheme();
@@ -85,7 +84,6 @@ function Searchbar(props: {
 			<Paper
 				component="form"
 				onSubmit={(e) => {
-					executeSearch(searchString);
 					e.preventDefault();
 				}}
 				sx={{
@@ -106,7 +104,6 @@ function Searchbar(props: {
 			>
 				<IconButton
 					type="button"
-					onClick={(e) => executeSearch(searchString)}
 					sx={{
 						backgroundColor: `${theme.palette.background}`,
 						borderRadius: "10px 0px 0px 10px",
