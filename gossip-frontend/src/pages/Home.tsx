@@ -1,9 +1,4 @@
-import {
-	Box,
-	Button,
-	Typography,
-	useTheme,
-} from "@mui/material";
+import { Box, Button, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import DisplayCard from "../components/Cards/DisplayCard";
 import Loading from "../components/Loading";
@@ -215,9 +210,19 @@ function Home() {
 							"> :last-child": {
 								marginBottom: "0px",
 							},
-							"::-webkit-scrollbar": { display: "none" },
-							msOverflowStyle: "none" /* IE and Edge */,
-							scrollbarWidth: "none" /* Firefox */,
+							"::-webkit-scrollbar": { width: "10px" },
+							"::-webkit-scrollbar-track": {
+								background: "rgba(255,255,255,0.1)",
+								borderRadius: "10px",
+							},
+							"::-webkit-scrollbar-thumb": {
+								background: "#888",
+								borderRadius: "10px",
+							},
+							"::-webkit-scrollbar-thumb:hover": {
+								background: "#555",
+							},
+							scrollbarWidth: "thin",
 							width: "100vw",
 							overflowY: "scroll",
 							alignItems: "center",
