@@ -46,8 +46,8 @@ func main() {
 	}
 
 	// connect to the database
-	connect := fmt.Sprintf("host=%s user=%s password=%s dbname=gossip port=5432 sslmode=%s",
-		os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_SSLMODE"))
+	connect := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=%s",
+		os.Getenv("DB_HOST"), os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_SSLMODE"))
 
 	var err error
 
