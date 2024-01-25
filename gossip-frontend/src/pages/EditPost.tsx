@@ -47,7 +47,6 @@ function EditPost() {
 	const [titleError, setTitleError] = useState("");
 
 	const [content, setContent] = useState("");
-	const [contentError, setContentError] = useState("");
 
 	const handleTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const newValue = e.target.value;
@@ -63,7 +62,6 @@ function EditPost() {
 	};
 
 	const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		const newValue = e.target.value;
 		setContent(e.target.value);
 	};
 	const [editPost] = useEditPostMutation();
@@ -83,7 +81,7 @@ function EditPost() {
 			errorHandle(postError, "Post");
 			navigate("/");
 		}
-	}, [postError]);
+	}, [postError, navigate]);
 
 	useEffect(() => {
 		if (tagError) errorHandle(tagError, "Tags");
@@ -225,8 +223,6 @@ function EditPost() {
 					required
 					value={content}
 					onChange={handleContentChange}
-					error={!!contentError}
-					helperText={contentError}
 				/>
 				<Box
 					sx={{

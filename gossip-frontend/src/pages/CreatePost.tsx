@@ -30,7 +30,6 @@ function CreatePost() {
 	const [titleError, setTitleError] = useState("");
 
 	const [content, setContent] = useState("");
-	const [contentError, setContentError] = useState("");
 
 	const handleTitleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const newValue = e.target.value;
@@ -189,8 +188,6 @@ function CreatePost() {
 					required
 					value={content}
 					onChange={handleContentChange}
-					error={!!contentError}
-					helperText={contentError}
 				/>
 				<Box
 					sx={{

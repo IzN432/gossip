@@ -6,7 +6,6 @@ import {
 	Chip,
 	Fade,
 	Paper,
-	Popover,
 	Popper,
 	Tooltip,
 	Typography,
@@ -39,7 +38,6 @@ function ViewPost() {
 	const theme = useTheme();
 	const isLarge = useMediaQuery(theme.breakpoints.down("lg"));
 	const isSmall = useMediaQuery(theme.breakpoints.down("md"));
-	const isXSmall = useMediaQuery(theme.breakpoints.down("xs"));
 
 	// retrieve post id
 	const { id } = useParams();

@@ -3,7 +3,6 @@ import {
 	Chip,
 	Fade,
 	Paper,
-	Popover,
 	Popper,
 	SxProps,
 	Tooltip,
@@ -11,7 +10,7 @@ import {
 	useMediaQuery,
 	useTheme,
 } from "@mui/material";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { PostMini } from "../../types/posts.interface";
 import HeartButton from "../Buttons/HeartButton";
 import CommentIcon from "@mui/icons-material/Comment";

@@ -55,7 +55,7 @@ export const api = createApi({
 				method: `POST`,
 				body: post,
 			}),
-			invalidatesTags: ["Post"],
+			invalidatesTags: ["Post", "Tag"],
 		}),
 		editPost: builder.mutation<Message<null>, PostUpdateForm>({
 			query: (post) => ({
@@ -63,14 +63,14 @@ export const api = createApi({
 				method: `PATCH`,
 				body: post,
 			}),
-			invalidatesTags: ["Post"],
+			invalidatesTags: ["Post", "Tag"],
 		}),
 		deletePost: builder.mutation<Message<null>, number>({
 			query: (id) => ({
 				url: `posts/${id}`,
 				method: `DELETE`,
 			}),
-			invalidatesTags: ["Post"],
+			invalidatesTags: ["Post", "Tag"],
 		}),
 
 		// REPLIES
