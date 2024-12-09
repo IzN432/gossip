@@ -1,6 +1,6 @@
 # Gossip
 
-Gossip is my submission (Isaac Ng Jun Jie) for CVWO winter assignment AY23/24. It is hosted on AWS available at http://izngossip.ddns.net. It supports mobile.
+Gossip is my submission (Isaac Ng Jun Jie) for CVWO winter assignment AY23/24. It is hosted on AWS available at http://izngossip.ddns.net. It supports mobile. (This has since been taken down)
 <br /><br />
 If dynamic DNS is blocked, can use this IP address instead http://ec2-54-169-38-181.ap-southeast-1.compute.amazonaws.com
 
